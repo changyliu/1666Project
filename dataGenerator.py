@@ -1,9 +1,15 @@
 import numpy as np
 import random
+import os
 from distance import Distance_EUC_2D
 from solnGenerator import generateFeasiblePDTour
 
 def generate_1PDPTW(dimension, numInstance, randSeed):
+    if not os.path.exists(f"data/1PDPTW_generated"):
+        os.makedirs(f"data/1PDPTW_generated")
+    os.mkdir(f"data/1PDPTW_generated/INSTANCES/")
+    os.mkdir(f"data/1PDPTW_generated/TOURS/")
+
     vehicleNum = 1
     serviceTime = 0
     
@@ -61,7 +67,7 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
         
         lines.append('NODE_COORD_SECTION')
         for loc in range(dimension):
-            lines.append(f'{loc+1} {randCoord[0]} {randCoord[1]}')
+            lines.append(f'{loc+1} {coordinates[loc][0]} {coordinates[loc][1]}')
         
         lines.append('PICKUP_AND_DELIVERY_SECTION')
         lines.append(f'1 0 0 {maxTW} 0 0 0') # create data for depot
@@ -78,7 +84,7 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
                 pickupLoc = pickup[delivery.index(loc)]
                 deliveryLoc = 0
 
-            lines.append(f'{loc+1} {actualDemand} {est} {lft} {serviceTime} {pickupLoc} {deliveryLoc}')
+            lines.append(f'{loc} {actualDemand} {est} {lft} {serviceTime} {pickupLoc} {deliveryLoc}')
 
         lines.append('DEPOT_SECTION')
         lines.append('1')
