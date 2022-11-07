@@ -4,14 +4,12 @@ from distance import Distance_EUC_2D
 from solnGenerator import generateFeasiblePDTour
 
 def generate_1PDPTW(dimension, numInstance, randSeed):
-<<<<<<< Updated upstream
-=======
+
     # if not os.path.exists(f"data/1PDPTW_generated"):
     #     os.makedirs(f"data/1PDPTW_generated")
     # os.mkdir(f"data/1PDPTW_generated/INSTANCES/")
     # os.mkdir(f"data/1PDPTW_generated/TOURS/")
 
->>>>>>> Stashed changes
     vehicleNum = 1
     serviceTime = 0
     
@@ -43,6 +41,8 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
             minTravelTime.append(Distance_EUC_2D(coordinates[solnTour[i] - 1], coordinates[solnTour[i+1] - 1]))
         
         cumMinTravelTime = np.cumsum(minTravelTime)
+
+        cost = cumMinTravelTime[-1] + Distance_EUC_2D(coordinates[solnTour[-1] - 1], coordinates[solnTour[0]]) # add time to return to depot
 
         maxTW = cumMinTravelTime[-1] + Distance_EUC_2D(coordinates[solnTour[dimension-1] - 1], coordinates[0]) \
             + random.randint(100,300) # set TW of depot to be large
@@ -99,9 +99,10 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
             f.write(l + '\n')
         f.close()
 
-        f = open(f"data/1PDPTW_generated/TOURS/{name}.txt", "w") # write solution file
+        f = open(f"data/1PDPTW_generated/TOURS/{name}_feasible.txt", "w") # write solution file
+        f.write(str(cost) + '\n')
         f.write(' '.join(str(x) for x in solnTour))
         f.close()
 
 
-generate_1PDPTW(11, 10, 2022)
+generate_1PDPTW(11, 1, 2022)
