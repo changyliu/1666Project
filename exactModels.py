@@ -5,9 +5,10 @@ from dataProcess import read1PDPTW
 
 def getDistanceMatrix(instance):
     distMatrix = []
-    for i in range(instance['numLocation']):
+    instance['coordinates'].append(instance['coordinates'][0]) # add coordinates of artificial ending depot
+    for i in range(instance['numLocation'] + 1):
         curRow = []
-        for j in range(instance['numLocation']):
+        for j in range(instance['numLocation'] + 1):
             curRow.append(Distance_EUC_2D(instance['coordinates'][i], instance['coordinates'][j]))
         distMatrix.append(curRow)
     
@@ -18,9 +19,12 @@ def solve1PDPTW_MIP(instance):
     # prep data
     M = 999999
     distMatrix = getDistanceMatrix(instance)
-    V = range(instance['numLocation']) # set of vertices
+    V = range(instance['numLocation'] + 1) # set of vertices, create extra vertex for returning to depot
     P = [loc - 1 for loc in instance['pickup'] if loc != 0]  # set of pickup locations
     D = [loc - 1 for loc in instance['delivery'] if loc != 0] # set of delivery locations
+
+    instance['demand'].append(0) # add 0 demand for artificial ending depot
+    instance['tw'].append(instance['tw'][0]) # add tw for artificial ending depot
 
     MIP = gp.Model('MIP')
 
@@ -35,10 +39,14 @@ def solve1PDPTW_MIP(instance):
     # constraints
 
     # each location is only visited once
-    for i in (P + D):
-        MIP.addConstr(gp.quicksum(x[i,j] for j in V) == 1)
-    for j in (P + D):
-        MIP.addConstr(gp.quicksum(x[i,j] for i in V) == 1)
+    for i in (P + D + [0]): # out
+        MIP.addConstr(gp.quicksum(x[i,j] for j in (P + D + [len(V) - 1]) if i != j) == 1)
+    for j in (P + D + [len(V) - 1]): # in
+        MIP.addConstr(gp.quicksum(x[i,j] for i in (P + D + [0]) if i != j) == 1)
+    
+    # # start and end at depot
+    # MIP.addConstr(gp.quicksum(x[0,j] for j in (P + D + [len(V) - 1])) == 1)
+    # MIP.addConstr(gp.quicksum(x[i,len(V) - 1] for i in (P + D + [0])) == 1)
 
     # define s and q
     for i in V:
@@ -63,18 +71,25 @@ def solve1PDPTW_MIP(instance):
     MIP.optimize()
 
     # get results
-    print(MIP.check_optimization_results())
 
-    soln = [1]
-    curLoc = 1
-    print(f'{curLoc}')
+    soln = [0 + 1]
+    curLoc = 0
+    route = f'{0 + 1}'
     for i in range(len(V) - 1):
+        # print([int(x[curLoc,j].x) for j in V])
         nextLoc = [int(x[curLoc,j].x) for j in V].index(1)
-        print(f' --> {nextLoc}')
-        soln.append(nextLoc)
+        route += (f' -> {nextLoc + 1}')
+        soln.append(nextLoc + 1)
         curLoc = nextLoc
+    
+    cost = MIP.ObjVal
 
-    return soln
+    print('\n')
+    print(soln)
+    print(f'Route: {route}')
+    print(f'Cost: {cost}')
+
+    return soln[0:-1], cost
 
 
 instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')

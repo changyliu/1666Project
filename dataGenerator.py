@@ -4,6 +4,14 @@ from distance import Distance_EUC_2D
 from solnGenerator import generateFeasiblePDTour
 
 def generate_1PDPTW(dimension, numInstance, randSeed):
+<<<<<<< Updated upstream
+=======
+    # if not os.path.exists(f"data/1PDPTW_generated"):
+    #     os.makedirs(f"data/1PDPTW_generated")
+    # os.mkdir(f"data/1PDPTW_generated/INSTANCES/")
+    # os.mkdir(f"data/1PDPTW_generated/TOURS/")
+
+>>>>>>> Stashed changes
     vehicleNum = 1
     serviceTime = 0
     
