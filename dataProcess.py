@@ -32,8 +32,21 @@ def read1PDPTW(file_path):
         demand.append(int(line[1]))
         tw.append((int(line[2]), int(line[3])))
         serviceTime.append(int(line[4]))
-        pickup.append(int(line[5]))
-        delivery.append(int(line[6]))
+
+        p = int(line[5])
+        if p > 0:
+            assert p > 1, \
+                "p != 1 since node idx starts from 1 and node 1 is depot"
+            p -= 1
+        pickup.append(p)
+
+        d = int(line[6])
+        if d > 0:
+            assert d > 1, \
+                "d != 1 since node idx starts from 1 and node 1 is depot"
+            d -= 1
+        delivery.append(d)
+
     instance['demand'] = demand
     instance['tw'] = tw
     instance['serviceTime'] = serviceTime
