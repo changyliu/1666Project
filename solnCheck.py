@@ -53,13 +53,13 @@ def check1PDPTW(soln, instance):
 
     
 
-    return precedence_check, tw_check, capacity_check, error
+    return precedence_check, tw_check, capacity_check, error, curLoc, curTime
 
-instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
-feasibleSoln = [1, 10, 7, 11, 9, 5, 2, 8, 6, 3, 4]
-soln1 = [1, 10, 7, 11, 9, 2, 8, 3, 4]
-soln2 = [1, 10, 7, 5, 9, 2, 5, 8, 6, 3, 4]
-soln3 = [1, 5, 3, 7, 9, 10, 2, 4, 6, 8, 11]
-precedence_check, tw_check, capacity_check, error = check1PDPTW(soln3, instance)
+# instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
+# feasibleSoln = [1, 10, 7, 11, 9, 5, 2, 8, 6, 3, 4]
+# soln1 = [1, 10, 7, 11, 9, 2, 8, 3, 4]
+# soln2 = [1, 10, 7, 5, 9, 2, 5, 8, 6, 3, 4]
+# soln3 = [1, 5, 3, 7, 9, 10, 2, 4, 6, 8, 11]
+# precedence_check, tw_check, capacity_check, error, violatedLoc = check1PDPTW(soln3, instance)
 
-print(error)
+# print(error)
