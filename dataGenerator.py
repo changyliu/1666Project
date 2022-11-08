@@ -70,7 +70,7 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
         
         lines.append('NODE_COORD_SECTION')
         for loc in range(dimension):
-            lines.append(f'{loc+1} {coordinates[loc][0]} {coordinates[loc][1]}')
+            lines.append(f'{loc+1} {coordinates[solnTour[loc] - 1][0]} {coordinates[solnTour[loc] - 1][1]}')
         
         lines.append('PICKUP_AND_DELIVERY_SECTION')
         lines.append(f'1 0 0 {maxTW} 0 0 0') # create data for depot
