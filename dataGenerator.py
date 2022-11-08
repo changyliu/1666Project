@@ -24,7 +24,6 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
         lines = []
 
         name = f'generated-{dimension}-{i}'
-        capacity = random.randint(100,500)
 
         pickup = random.sample(range(2, dimension+1), int((dimension-1)/2)) # 1 is depot location, no pickup or delivery
         delivery = [x for x in range(2, dimension+1) if x not in pickup]
