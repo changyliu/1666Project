@@ -20,8 +20,8 @@ def solve1PDPTW_MIP(instance):
     M = 999999
     distMatrix = getDistanceMatrix(instance)
     V = range(instance['numLocation'] + 1) # set of vertices, create extra vertex for returning to depot
-    P = [loc - 1 for loc in instance['pickup'] if loc != 0]  # set of pickup locations
-    D = [loc - 1 for loc in instance['delivery'] if loc != 0] # set of delivery locations
+    P = [loc for loc in instance['pickup'] if loc != 0]  # set of pickup locations
+    D = [loc  for loc in instance['delivery'] if loc != 0] # set of delivery locations
 
     instance['demand'].append(0) # add 0 demand for artificial ending depot
     instance['tw'].append(instance['tw'][0]) # add tw for artificial ending depot
@@ -65,7 +65,7 @@ def solve1PDPTW_MIP(instance):
 
     # precedence
     for i in P:
-        MIP.addConstr(s[instance['delivery'][i] - 1] >= s[i] + distMatrix[i][instance['delivery'][i] - 1])
+        MIP.addConstr(s[instance['delivery'][i]] >= s[i] + distMatrix[i][instance['delivery'][i]])
    
     # optimizing
     MIP.optimize()
@@ -92,6 +92,6 @@ def solve1PDPTW_MIP(instance):
     return soln[0:-1], cost
 
 
-instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
+instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-3.txt')
 # print(getDistanceMatrix(instance))
 solve1PDPTW_MIP(instance)
