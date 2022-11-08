@@ -1,18 +1,16 @@
 import numpy as np
 import random
+import os
 from distance import Distance_EUC_2D
 from solnGenerator import generateFeasiblePDTour
 
 def generate_1PDPTW(dimension, numInstance, randSeed):
-
-    # if not os.path.exists(f"data/1PDPTW_generated"):
-    #     os.makedirs(f"data/1PDPTW_generated")
-    # os.mkdir(f"data/1PDPTW_generated/INSTANCES/")
-    # os.mkdir(f"data/1PDPTW_generated/TOURS/")
+    os.makedirs(f"./data/1PDPTW_generated/INSTANCES", exist_ok=True)
+    os.makedirs(f"./data/1PDPTW_generated/TOURS", exist_ok=True)
 
     vehicleNum = 1
     serviceTime = 0
-    
+
     random.seed(randSeed)
 
     randomSeeds = [random.randint(0,5000) for i in range(numInstance)]
@@ -28,17 +26,20 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
         pickup = random.sample(range(2, dimension+1), int((dimension-1)/2)) # 1 is depot location, no pickup or delivery
         delivery = [x for x in range(2, dimension+1) if x not in pickup]
 
-        solnTour = generateFeasiblePDTour(dimension, pickup, delivery, 2022)
+        solnTour = generateFeasiblePDTour(dimension, pickup, delivery, randomSeeds[i])
 
         coordinates = []
         for loc in range(dimension):
-            randCoord = [random.randint(0,200) for i in range(2)]
+            randCoord = [random.randint(0,200) for _ in range(2)]
+            while randCoord in coordinates:
+                # avoid duplicates
+                randCoord = [random.randint(0,200) for _ in range(2)]
             coordinates.append(randCoord)
 
         minTravelTime = []
-        for i in range(dimension-1):
-            minTravelTime.append(Distance_EUC_2D(coordinates[solnTour[i] - 1], coordinates[solnTour[i+1] - 1]))
-        
+        for j in range(dimension-1):
+            minTravelTime.append(Distance_EUC_2D(coordinates[solnTour[j] - 1], coordinates[solnTour[j+1] - 1]))
+
         cumMinTravelTime = np.cumsum(minTravelTime)
 
         cost = cumMinTravelTime[-1] + Distance_EUC_2D(coordinates[solnTour[-1] - 1], coordinates[solnTour[0]]) # add time to return to depot
@@ -46,10 +47,10 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
         maxTW = cumMinTravelTime[-1] + Distance_EUC_2D(coordinates[solnTour[dimension-1] - 1], coordinates[0]) \
             + random.randint(100,300) # set TW of depot to be large
 
-        demand = [random.randint(0,50) for i in range(int((dimension-1)/2))]
+        demand = [random.randint(0,50) for _ in range(int((dimension-1)/2))]
         minCapacity = []
-        for i in range(dimension-1):
-            loc = solnTour[i+1]
+        for j in range(dimension-1):
+            loc = solnTour[j+1]
             if loc in pickup:
                 minCapacity.append(demand[pickup.index(loc)])
             else:
@@ -65,11 +66,11 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
         lines.append(f'VEHICLES : {vehicleNum}')
         lines.append(f'CAPACITY : {capacity}')
         lines.append('EDGE_WEIGHT_TYPE : EXACT_2D')
-        
+
         lines.append('NODE_COORD_SECTION')
         for loc in range(dimension):
             lines.append(f'{loc+1} {coordinates[solnTour[loc] - 1][0]} {coordinates[solnTour[loc] - 1][1]}')
-        
+
         lines.append('PICKUP_AND_DELIVERY_SECTION')
         lines.append(f'1 0 0 {maxTW} 0 0 0') # create data for depot
         for loc in range(2, dimension+1):

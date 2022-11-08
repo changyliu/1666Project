@@ -1,0 +1,6 @@
+{
+    "MODEL_DIR": "models",
+    "DATA_DIR": "data",
+    "PLOT_DIR": "figures",
+    "RESULT_DIR": "results"
+}
