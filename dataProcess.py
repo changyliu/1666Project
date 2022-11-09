@@ -2,6 +2,13 @@
 
 from os.path import isfile, join
 
+def read1PDPTW_tour(file_path):
+    f = open(file_path, "r")
+
+    cost = f.readline().split()[-1]
+    line = f.readline().split()
+    tour = [int(x) for x in line]
+    return cost, tour
 
 def read1PDPTW(file_path):
     f = open(file_path, "r")
@@ -54,6 +61,10 @@ def read1PDPTW(file_path):
     instance['delivery'] = delivery
 
     return instance
-        
-# instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
-# print(instance['name'])
+
+
+if __name__ == "__main__":
+    # instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
+    # print(instance['name'])
+
+    instance = read1PDPTW_tour('data/1PDPTW_generated_test/TOURS/generated-1000_feasible.txt')

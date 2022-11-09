@@ -11,7 +11,7 @@ def generateRandomSoln(dimension, solnHistory):
     seen = True
     while seen:
         newSoln = [1]
-        newSoln += random.sample(range(2, instance['numLocation'] + 1), instance['numLocation'] - 1)
+        newSoln += random.sample(range(2, dimension + 1), dimension - 1)
         if newSoln not in solnHistory:
             seen = False
     return newSoln
@@ -87,7 +87,8 @@ def solnRepair(soln, instance, iterLimit, timeLimit, verbose=0):
             if newSoln in solnHistory:
                 newSoln = generateRandomSoln(instance['numLocation'], solnHistory)
 
-            print(newSoln)
+            if verbose:
+                print(newSoln)
             precedence_check, tw_check, capacity_check, error, violatedLoc, locTime = check1PDPTW(newSoln, instance)
             soln = newSoln.copy()
             solnHistory.append(soln)
@@ -109,7 +110,7 @@ def solnRepair(soln, instance, iterLimit, timeLimit, verbose=0):
 
             # check if newSoln has been tried previously:
             if newSoln in solnHistory:
-                newSoln = generateRandomSoln(instance['numLocations'], solnHistory)
+                newSoln = generateRandomSoln(instance['numLocation'], solnHistory)
 
             precedence_check, tw_check, capacity_check, error, violatedLoc, locTime = check1PDPTW(newSoln, instance)
             soln = newSoln.copy()
@@ -135,12 +136,12 @@ if __name__ == "__main__":
     # soln3 = [1,10,7,11,9,5,6,2,8,3,4]
 
     soln1 = [1, 5, 9, 4, 8, 6, 7, 10, 2, 11, 3]
-    soln1039 = [1, 5, 9, 6, 10, 7, 4, 8, 2, 3, 11]
-    instance = read1PDPTW('test_data/generated-1039.txt')
+    soln1113 = [1, 8, 7, 6, 10, 3, 9, 11, 4, 2, 5]
+    instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-1113.txt')
     
     # print(instance['tw'])
 
-    repairedSoln, numIter, timeSpent, solnFeasibility = solnRepair(soln1039, instance, 200, 600,1)
+    repairedSoln, numIter, timeSpent, solnFeasibility = solnRepair(soln1113, instance, 200, 600,1)
     cost = 999999
     if solnFeasibility:
         cost = computeCost(repairedSoln, instance)

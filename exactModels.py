@@ -15,7 +15,7 @@ def getDistanceMatrix(instance):
     
     return distMatrix
 
-def solve1PDPTW_MIP(instance):
+def solve1PDPTW_MIP(instance, logtoconsole=True):
 
     # prep data
     M = 999999
@@ -28,6 +28,8 @@ def solve1PDPTW_MIP(instance):
     instance['tw'].append(instance['tw'][0]) # add tw for artificial ending depot
 
     MIP = gp.Model('MIP')
+    if logtoconsole == False:
+        MIP.setParam('LogToConsole', 0)
 
     # variables
     x = MIP.addVars(V, V, vtype = gp.GRB.BINARY, name = 'x') # x_ij = 1 is location j is visited after location i
@@ -92,14 +94,15 @@ def solve1PDPTW_MIP(instance):
         curLoc = nextLoc
     
     cost = computeCost(soln[0:-1], instance)
-    
 
-    print('\n')
-    print(soln)
-    print(f'Route: {route}')
-    print(f'Cost: {cost}')
+    if logtoconsole:
+        print('\n')
+        print(soln)
+        print(f'Route: {route}')
+        print(f'Cost: {cost}')
+        print(s_soln)
+
     # print(tt)
-    print(s_soln)
     # for i in V:
     #     print([x[i,j].x for j in V])
     # print(s[2].x)
@@ -107,8 +110,8 @@ def solve1PDPTW_MIP(instance):
 
     return soln[0:-1], cost
 
-
-instance = read1PDPTW('test_data/generated-1039.txt')
-# instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
-# print(getDistanceMatrix(instance))
-solve1PDPTW_MIP(instance)
+if __name__ == "__main__":
+    instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-1039.txt')
+    # instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
+    # print(getDistanceMatrix(instance))
+    solve1PDPTW_MIP(instance)
