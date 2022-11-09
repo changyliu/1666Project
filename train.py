@@ -1,5 +1,4 @@
 import torch
-import torch.optim as optim
 import numpy as np
 import random
 from collections import namedtuple
@@ -8,7 +7,7 @@ import os
 import json
 import argparse
 
-from models import QNet, QLearning, state2tens, is_state_final, gen_solution, State
+from models import init_model, state2tens, is_state_final, gen_solution, State
 from memory import Memory
 from utils import get_static_state, total_distance, cost_func, float_to_str, get_best_model
 from plot import plot_loss, plot_path_length, plot_cost, plot_solution
@@ -17,23 +16,6 @@ from dataProcess import read1PDPTW
 
 import config as c
 config = c.config()
-
-def init_model(*args, model_name, fname=None, device=torch.device('cpu')):
-    #Create a new model. If fname is defined, load the model from the specified file.
-    args = args[0]
-
-    Q_net = QNet(args.emb_dim, T=args.emb_iter_T, device=device).to(device)
-    optimizer = optim.Adam(Q_net.parameters(), lr=args.lr)
-    lr_scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=args.lr_decay_rate)
-    
-    if fname is not None:
-        checkpoint = torch.load(fname)
-        Q_net.load_state_dict(checkpoint['model'])
-        optimizer.load_state_dict(checkpoint['optimizer'])
-        lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
-    
-    Q_func = QLearning(Q_net, optimizer, lr_scheduler, model_name=model_name, device=device)
-    return Q_func, Q_net, optimizer, lr_scheduler
 
 def train(*args):
     args = args[0]
@@ -226,6 +208,7 @@ def train(*args):
         length = total_distance(solution, W)
         path_lengths.append(length)
         cost = cost_func(solution, W, current_state.entering_times, current_state.leaving_times)
+        #cost = total_distance(solution, W)
         costs.append(cost)
 
         if episode % 10 == 0:#
@@ -234,7 +217,7 @@ def train(*args):
                 Q_func.optimizer.param_groups[0]['lr']))
 
             if len(memory) >= args.batch_size and len(memory) >= 2000:
-                plot_loss(losses, plot_dir)
+                plot_loss(losses, plot_dir, plot_min=10**4, plot_max=10**5)
                 plot_path_length(path_lengths, plot_dir)
                 plot_cost(costs, plot_dir)
 

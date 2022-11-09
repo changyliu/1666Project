@@ -92,6 +92,6 @@ def solve1PDPTW_MIP(instance):
     return soln[0:-1], cost
 
 
-instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
+instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-2.txt')
 # print(getDistanceMatrix(instance))
 solve1PDPTW_MIP(instance)

@@ -4,7 +4,7 @@ from distance import Distance_EUC_2D
 from collections import Counter
 from dataProcess import read1PDPTW
 
-def check1PDPTW(soln, instance):
+def check1PDPTW(soln, instance, return_now=True):
     precedence_check = True
     tw_check = True
     capacity_check = True
@@ -24,7 +24,7 @@ def check1PDPTW(soln, instance):
     
     capacity = instance['capacity']
 
-    while (precedence_check and tw_check and capacity_check and curLoc < len(soln) - 1):
+    while (curLoc < len(soln) - 1):
         curLoc += 1
         # print(curLoc)
         next_loc = soln[curLoc]
@@ -51,7 +51,9 @@ def check1PDPTW(soln, instance):
                 precedence_check = False
                 error.append(f'PRECEDENCE ERROR: location {next_loc} visited before location {pickup_loc}')
 
-    
+        if return_now:
+            if not precedence_check or not tw_check or not capacity_check:
+                break
 
     return precedence_check, tw_check, capacity_check, error, curLoc, curTime
 

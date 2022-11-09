@@ -5,6 +5,10 @@ from scipy.spatial import distance_matrix
 import config as c
 config = c.config()
 
+class dotdict(dict):
+    def __getattr__(self, name):
+        return self[name]
+
 def get_best_model(model_dir):
     """
     Get file with smallest cost in the model directory.
@@ -41,14 +45,15 @@ def cost_func(solution, W, entering_times, leaving_times, beta=1):
         return 0
 
     penalty = []
-    arriving_time = 0
+    a = 0 # arrival time
     for i in range(len(solution) - 1):
-        arriving_time += W[solution[i], solution[i+1]].item()
+        a += W[solution[i], solution[i+1]].item()
         e = entering_times[solution[i+1]]
-        if arriving_time < e:
-            arriving_time = e
+        l = leaving_times[solution[i+1]]
+        #if arriving_time < e:
+        #    arriving_time = e
         
-        penalty.append(max(arriving_time-leaving_times[solution[i+1]], 0))
+        penalty.append(max(a-l, 0) + max(e-a, 0))
 
     return total_distance(solution, W) + beta * sum(penalty)
 
