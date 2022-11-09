@@ -1,6 +1,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.optim as optim
+
 import random
 import os
 from collections import namedtuple
@@ -10,6 +12,23 @@ from utils import get_static_state
 import config as c
 config = c.config()
 
+def init_model(*args, model_name, fname=None, device=torch.device('cpu')):
+    #Create a new model. If fname is defined, load the model from the specified file.
+    args = args[0]
+
+    Q_net = QNet(args.emb_dim, T=args.emb_iter_T, device=device).to(device)
+    optimizer = optim.Adam(Q_net.parameters(), lr=args.lr)
+    lr_scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=args.lr_decay_rate)
+    
+    if fname is not None:
+        checkpoint = torch.load(fname)
+        Q_net.load_state_dict(checkpoint['model'])
+        optimizer.load_state_dict(checkpoint['optimizer'])
+        lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])
+    
+    Q_func = QLearning(Q_net, optimizer, lr_scheduler, model_name=model_name, device=device)
+    return Q_func, Q_net, optimizer, lr_scheduler
+
 class QNet(nn.Module):
     """
     The neural net that will parameterize the function Q(s, a)
@@ -18,26 +37,29 @@ class QNet(nn.Module):
     and the output is a vector of size N containing Q(s, a) for each of the N actions a.
     """    
     
-    def __init__(self, emb_dim, T=4, device=torch.device('cpu')):
-        """ emb_dim: embedding dimension p
-            T: number of iterations for the graph embedding
+    def __init__(self, emb_dim, node_dim=9, T=4, device=torch.device('cpu')):
+        """ 
+        We use 9 dimensions for representing the nodes' states:
+        (binary) whether the node has been visited
+        (binary) whether the node is the first of the visited sequence
+        (binary) whether the node is the last of the visited sequence
+        (int) x,
+        (int) y,
+        (int) entering time,
+        (int) leaving time,
+        (int) demand,
+        (float) distance to the depot
+
+        emb_dim: embedding dimension p
+        T: number of iterations for the graph embedding
+
         """
         super(QNet, self).__init__()
         self.emb_dim = emb_dim
         self.T = T
         self.device = device
         
-        # We use 9 dimensions for representing the nodes' states:
-        # (binary) whether the node has been visited
-        # (binary) whether the node is the first of the visited sequence
-        # (binary) whether the node is the last of the visited sequence
-        # (int) x,
-        # (int) y,
-        # (int) entering time,
-        # (int) leaving time,
-        # (int) demand,
-        # (float) distance to the depot
-        self.node_dim = 9
+        self.node_dim = node_dim
         
         # We can have an extra layer after theta_1 (for the sake of example to make the network deeper)
         nr_extra_layers_1 = 1
@@ -180,10 +202,12 @@ class QLearning():
         """
         solution = state.partial_solution
         pickup = state.pickup
+        #print(idx)
+        #print("{} (load) + {} (demand) <= {} (cap)".format(state.load, state.demands[idx], state.capacity))
 
         if (len(solution) == 0 or state.W[solution[-1], idx] > 0) and \
             idx not in solution and \
-            (pickup[idx] == 0 or pickup[idx] in solution) and \
+            (pickup[idx] == 0 or (pickup[idx] - 1) in solution) and \
             state.load + state.demands[idx] <= state.capacity:
                 return True
         return False
@@ -274,6 +298,10 @@ def gen_solution(Q_func, instance, device=torch.device('cpu')):
                                                     current_state)
                         
         solution = solution + [next_node]
+        if load > current_state.capacity:
+            raise ValueError
+        load += demands[next_node]
+
         current_state = State(W=W,
                             coords=coords,
                             partial_solution=solution,

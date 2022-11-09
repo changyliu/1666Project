@@ -12,7 +12,7 @@ def computeCost(soln, instance):
     totalTravelTime += Distance_EUC_2D(instance['coordinates'][soln[-1] - 1], instance['coordinates'][soln[0]]) # add time to return to depot
     return totalTravelTime
 
-def solnRepair(soln, instance, iterLimit, timeLimit):
+def solnRepair(soln, instance, iterLimit, timeLimit, verbose=0):
     startTime = time.time()
     timeSpent = time.time() - startTime
     i = 0
@@ -22,10 +22,11 @@ def solnRepair(soln, instance, iterLimit, timeLimit):
     solnHistory = [soln]
 
     while (not precedence_check or not tw_check or not capacity_check) and i < iterLimit and timeSpent < timeLimit:
-        print(f'***** ITERATION {i} *****')
-        print(error)
-        print(newSoln)
-        # print(violatedLoc)
+        if verbose:
+            print(f'***** ITERATION {i} *****')
+            print(error)
+            print(newSoln)
+            # print(violatedLoc)
         if not precedence_check: # insert associated pickup location before current delivery location
             newSoln.remove(instance['pickup'][soln[violatedLoc]-1])
             newSoln.insert(violatedLoc, instance['pickup'][soln[violatedLoc]-1])
@@ -75,16 +76,18 @@ def solnRepair(soln, instance, iterLimit, timeLimit):
 
         i += 1
         timeSpent = time.time() - startTime
-    return newSoln, i, timeSpent
+    return newSoln, i, timeSpent, (precedence_check and tw_check and capacity_check)
 
-soln1 = [1,11,7,9,10,6,5,2,8,3,4]
-soln2 = [1,10,9,11,5,2,8,3,4,7,6]
-soln3 = [1,10,7,11,9,5,6,2,8,3,4]
-instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
 
-repairedSoln, numIter, timeSpent = solnRepair(soln2, instance, 5000, 600)
-cost = computeCost(repairedSoln, instance)
-print('\n')
-print(repairedSoln)
-print(f'Cost: {cost}')
-print(f'Total iterations: {numIter}, Time Spent: {timeSpent}')
+if __name__ == "__main__":
+    soln1 = [1,11,7,9,10,6,5,2,8,3,4]
+    soln2 = [1,10,9,11,5,2,8,3,4,7,6]
+    soln3 = [1,10,7,11,9,5,6,2,8,3,4]
+    instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-0.txt')
+
+    repairedSoln, numIter, timeSpent = solnRepair(soln2, instance, 5000, 600)
+    cost = computeCost(repairedSoln, instance)
+    print('\n')
+    print(repairedSoln)
+    print(f'Cost: {cost}')
+    print(f'Total iterations: {numIter}, Time Spent: {timeSpent}')
