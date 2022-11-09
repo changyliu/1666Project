@@ -1,6 +1,7 @@
 import gurobipy as gp
 from distance import Distance_EUC_2D
 from dataProcess import read1PDPTW
+from utils import computeCost
 
 
 def getDistanceMatrix(instance):
@@ -51,8 +52,12 @@ def solve1PDPTW_MIP(instance):
     # define s and q
     for i in V:
         for j in V:
-            MIP.addConstr(s[j] >= s[i] + distMatrix[i][j] - M * ( 1- x[i,j]))
+            MIP.addConstr(s[j] >= s[i] + distMatrix[i][j] - M * ( 1- x[i,j])) 
+            MIP.addConstr(s[i] + distMatrix[i][j] >= s[j] -  M * ( 1 - x[i,j])) 
             MIP.addConstr(q[j] >= q[i] + instance['demand'][i] - M * ( 1- x[i,j]))
+            MIP.addConstr(q[i] + instance['demand'][i] >= q[j] - M * ( 1- x[i,j]))
+    MIP.addConstr(s[0] == 0) # make sure start time for depot is set to be 0
+    MIP.addConstr(q[0] == 0) # make sure load of vehicle is 0 at depot
     
     # tw
     for i in V:
@@ -75,23 +80,35 @@ def solve1PDPTW_MIP(instance):
     soln = [0 + 1]
     curLoc = 0
     route = f'{0 + 1}'
+    s_soln = [s[curLoc].x]
+    tt = []
     for i in range(len(V) - 1):
         # print([int(x[curLoc,j].x) for j in V])
         nextLoc = [int(x[curLoc,j].x) for j in V].index(1)
         route += (f' -> {nextLoc + 1}')
         soln.append(nextLoc + 1)
+        s_soln.append(s[nextLoc].x)
+        tt.append(distMatrix[curLoc][nextLoc])
         curLoc = nextLoc
     
-    cost = MIP.ObjVal
+    cost = computeCost(soln[0:-1], instance)
+    
 
     print('\n')
     print(soln)
     print(f'Route: {route}')
     print(f'Cost: {cost}')
+    # print(tt)
+    print(s_soln)
+    # for i in V:
+    #     print([x[i,j].x for j in V])
+    # print(s[2].x)
+    # print(instance['tw'][2])
 
     return soln[0:-1], cost
 
 
-instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-2.txt')
+instance = read1PDPTW('test_data/generated-1039.txt')
+# instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
 # print(getDistanceMatrix(instance))
 solve1PDPTW_MIP(instance)

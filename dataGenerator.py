@@ -106,3 +106,4 @@ def generate_1PDPTW(dimension, numInstance, randSeed):
 
 
 generate_1PDPTW(11, 1, 2022)
+generate_1PDPTW(11, 1000, 2022)

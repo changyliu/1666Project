@@ -1,6 +1,7 @@
 import numpy as np
 import os
 from scipy.spatial import distance_matrix
+import math
 
 import config as c
 config = c.config()
@@ -103,3 +104,18 @@ def get_static_state(instance):
         return coords, capacity, demands, pickup, delivery, W, E, L
     else:
         raise NotImplementedError
+
+
+def Distance_EUC_2D(locA, locB):
+    xd = locA[0] - locB[0]
+    yd = locA[1] - locB[1]
+    return int(math.sqrt(xd * xd + yd * yd))
+
+
+def computeCost(soln, instance):
+    totalTravelTime = 0
+    for i in range(instance['numLocation']-1):
+        totalTravelTime += Distance_EUC_2D(instance['coordinates'][soln[i] - 1], instance['coordinates'][soln[i+1] - 1])
+
+    totalTravelTime += Distance_EUC_2D(instance['coordinates'][soln[-1] - 1], instance['coordinates'][soln[0]]) # add time to return to depot
+    return totalTravelTime
