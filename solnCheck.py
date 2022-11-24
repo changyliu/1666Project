@@ -60,13 +60,13 @@ def check1PDPTW(soln, instance, return_now=True):
 
 if __name__ == "__main__":
     # instance = read1PDPTW('test_data/generated-1113.txt')
-    instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-1000.txt')
+    instance = read1PDPTW('data/1PDPTW_generated_d11_i3000_sd2022_test/INSTANCES/generated-1000.txt')
     soln1000 = [1, 7, 2, 8, 9, 3, 6, 5, 11, 10, 4]
     soln11_0_opt = [1, 3, 11, 2, 5, 7, 8, 6, 4, 9, 10]
     soln2 = [1,3,7,11,9,2,4,5,6,10,8]
     # soln1 = [1, 10, 7, 11, 9, 2, 8, 3, 4]
     # soln2 = [1, 10, 7, 5, 9, 2, 5, 8, 6, 3, 4]
     # soln3 = [1, 5, 3, 7, 9, 10, 2, 4, 6, 8, 11]
-    precedence_check, tw_check, capacity_check, error, violatedLoc, curTime = check1PDPTW(soln1000, instance)
+    precedence_check, tw_check, capacity_check, error, violatedLoc, curTime = check1PDPTW(soln1000, instance, return_now=False)
 
-    print(error)
+    print(precedence_check, tw_check, capacity_check, error, violatedLoc, curTime)

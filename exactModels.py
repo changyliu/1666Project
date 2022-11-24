@@ -108,10 +108,13 @@ def solve1PDPTW_MIP(instance, logtoconsole=True):
     # print(s[2].x)
     # print(instance['tw'][2])
 
-    return soln[0:-1], cost
+    solve_time = MIP.Runtime
+
+    return soln[0:-1], cost, solve_time, MIP.status
 
 if __name__ == "__main__":
-    instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-1039.txt')
+    instance = read1PDPTW('data/1PDPTW_generated_d11_i3000_sd2022_test/INSTANCES/generated-1000.txt')
     # instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
     # print(getDistanceMatrix(instance))
-    solve1PDPTW_MIP(instance)
+    soln, cost, solve_time, status = solve1PDPTW_MIP(instance)
+    print(soln, cost, solve_time, status)

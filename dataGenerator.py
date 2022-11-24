@@ -6,9 +6,9 @@ from solnGenerator import generateFeasiblePDTour
 from dataProcess import read1PDPTW, read1PDPTW_tour
 from solnCheck import check1PDPTW
 
-def generate_1PDPTW(dimension, numInstance, randSeed, ext=''):
-    os.makedirs("./data/1PDPTW_generated_d{}_i{}_sd{}{}/INSTANCES".format(dimension, numInstance, randSeed, ext), exist_ok=True)
-    os.makedirs("./data/1PDPTW_generated_d{}_i{}_sd{}{}/TOURS".format(dimension, numInstance, randSeed, ext), exist_ok=True)
+def generate_1PDPTW(dimension, numInstance, randSeed, tw_min=100, tw_max=300, ext=''):
+    os.makedirs("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/INSTANCES".format(dimension, numInstance, tw_min, tw_max, randSeed, ext), exist_ok=True)
+    os.makedirs("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/TOURS".format(dimension, numInstance, tw_min, tw_max, randSeed, ext), exist_ok=True)
 
     vehicleNum = 1
     serviceTime = 0
@@ -47,7 +47,7 @@ def generate_1PDPTW(dimension, numInstance, randSeed, ext=''):
         cost = cumMinTravelTime[-1] + Distance_EUC_2D(coordinates[solnTour[-1] - 1], coordinates[solnTour[0]]) # add time to return to depot
 
         maxTW = cumMinTravelTime[-1] + Distance_EUC_2D(coordinates[solnTour[dimension-1] - 1], coordinates[0]) \
-            + random.randint(100,300) # set TW of depot to be large
+            + random.randint(tw_min,tw_max) # set TW of depot to be large
 
         demand = [random.randint(0,50) for _ in range(int((dimension-1)/2))]
         minCapacity = []
@@ -76,7 +76,7 @@ def generate_1PDPTW(dimension, numInstance, randSeed, ext=''):
         lines.append('PICKUP_AND_DELIVERY_SECTION')
         lines.append(f'1 0 0 {maxTW} 0 0 0') # create data for depot
         for loc in range(2, dimension+1):
-            TWrange = random.randint(100,300)
+            TWrange = random.randint(tw_min, tw_max)
             est = max(0, cumMinTravelTime[solnTour.index(loc) - 1] - TWrange)
             lft = cumMinTravelTime[solnTour.index(loc) - 1] + TWrange
             actualDemand = minCapacity[solnTour.index(loc) - 1]
@@ -95,20 +95,20 @@ def generate_1PDPTW(dimension, numInstance, randSeed, ext=''):
         lines.append('-1')
         lines.append('EOF')
 
-        f = open("./data/1PDPTW_generated_d{}_i{}_sd{}{}/INSTANCES/{}.txt".format(dimension, numInstance, randSeed, ext, name), "w") # write instance file
+        f = open("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/INSTANCES/{}.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name), "w") # write instance file
         for l in lines:
             # print(l)
             f.write(l + '\n')
         f.close()
 
-        f = open("./data/1PDPTW_generated_d{}_i{}_sd{}{}/TOURS/{}_feasible.txt".format(dimension, numInstance, randSeed, ext, name), "w") # write solution file
+        f = open("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/TOURS/{}_feasible.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name), "w") # write solution file
         f.write(str(cost) + '\n')
         f.write(' '.join(str(x) for x in solnTour))
         f.close()
 
         # solution check
-        instance = read1PDPTW("./data/1PDPTW_generated_d{}_i{}_sd{}{}/INSTANCES/{}.txt".format(dimension, numInstance, randSeed, ext, name))
-        cost, tour = read1PDPTW_tour("./data/1PDPTW_generated_d{}_i{}_sd{}{}/TOURS/{}_feasible.txt".format(dimension, numInstance, randSeed, ext, name))
+        instance = read1PDPTW("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/INSTANCES/{}.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name))
+        cost, tour = read1PDPTW_tour("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/TOURS/{}_feasible.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name))
         precedence_check, tw_check, capacity_check, error, violatedLoc, curTime = check1PDPTW(tour, instance)
         if len(error) != 0:
             print("Generated tour is infeasible", error)
@@ -116,4 +116,4 @@ def generate_1PDPTW(dimension, numInstance, randSeed, ext=''):
 
 
 #generate_1PDPTW(11, 1, 2022)
-generate_1PDPTW(11, 100000, 2022, ext='')
+generate_1PDPTW(11, 100000, 2022, tw_min=300, tw_max=500, ext='')
