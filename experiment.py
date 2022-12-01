@@ -7,7 +7,7 @@ import csv
 
 from dataProcess import read1PDPTW
 from exactModels import solve1PDPTW_MIP
-from Agent import RLAgent, RLAgent_repair
+from Agent import RLAgent, RLAgent_repair, ALNSAgent
 from utils import float_to_str, dotdict
 
 import config as c
@@ -44,6 +44,10 @@ class Experiment():
                                 )
             else:
                 raise NotImplementedError
+        elif method == 'alns':
+            self.agent = ALNSAgent(args)
+        else:
+            raise NotImplementedError
     
     def run(self, instance):
         """
@@ -63,7 +67,7 @@ class Experiment():
                 status = 'infeasible'
             else:
                 raise ValueError
-        elif self.method in ['rl', 'rl_repair']:
+        elif self.method in ['rl', 'rl_repair', 'alns']:
             solution, cost, solve_time, status = self.agent.solve(instance)
         else:
             raise NotImplementedError
@@ -93,7 +97,7 @@ class Experiment():
         output_dict = {}
         for i, (file, soln, t, status, cost) in enumerate(zip(filenames, solutions, solve_times, status_all, costs)):
             data = {'instance'  : file, 
-                    'solution'  : soln,
+                    'solution'  : [int(x) for x in soln],
                     'cost'      : cost,
                     'solve_time': t,
                     'status'    : status,
@@ -103,14 +107,16 @@ class Experiment():
         # Save the results to json and csv
         result_dir = os.path.join('.', config['RESULT_DIR'], 'experiment', self.test_dataset)
         os.makedirs(result_dir, exist_ok=True)
-        result_filename = '{}_trd{}_ed{}_ne{}_bs{}_lr{}_bt{}_sd{}'.format(
+        result_filename = '{}_rp{}_trd{}_ed{}_ne{}_bs{}_lr{}_bt{}_dst{}_sd{}'.format(
                     self.method,
+                    self.args.repair,
                     self.args.dataset_name,
                     self.args.emb_dim,
                     self.args.num_episodes,
                     self.args.batch_size,
                     float_to_str(self.args.lr),
                     self.args.beta,
+                    float_to_str(self.args.degree_of_destruction),
                     self.args.seed
                     )
         json_path = os.path.join(result_dir, '{}.json'.format(result_filename))
@@ -162,6 +168,10 @@ class Experiment():
         json_output['beta'] = self.args.beta
         json_output['seed'] = self.args.seed
         json_output['feasible_rate'] = feasible_rate
+        json_output['repair'] = self.args.repair
+        json_output['beta_alns'] = self.args.beta_alns
+        json_output['epsilon'] = self.args.beta_alns
+        json_output['degree_of_destruction'] = self.args.degree_of_destruction
 
         output = []
         for (key, val) in output_dict.items():
@@ -189,20 +199,27 @@ if __name__ == "__main__":
     args, remaining = parser.parse_known_args()
 
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-    rl_args = dotdict({
-        'dataset_name': args.dataset_name,
-        'emb_dim'      : args.emb_dim,
-        'emb_iter_T'   : 1,
-        'num_episodes' : args.num_episodes,
-        'batch_size'   : args.batch_size,
-        'lr'           : args.lr,
-        'lr_decay_rate': 1. - 2e-5,
-        'beta'         : args.beta,
+    agent_args = dotdict({
+        'dataset_name'          : args.dataset_name,
+        'emb_dim'               : args.emb_dim,
+        'emb_iter_T'            : 1,
+        'num_episodes'          : args.num_episodes,
+        'batch_size'            : args.batch_size,
+        'lr'                    : args.lr,
+        'lr_decay_rate'         : 1. - 2e-5,
+        'beta'                  : args.beta,
+
+        'repair'                : 'alns',
+
+        'beta_alns'             : 10,
+        'epsilon'               : 0.05,
+        'degree_of_destruction' : 0.6,
+
         'seed'         : args.seed,
         'device'       : device
     })
 
-    experiment = Experiment(rl_args, args.method, args.test_dataset)
+    experiment = Experiment(agent_args, args.method, args.test_dataset)
     #instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-16.txt')
     solutions = experiment.run_all()
 
