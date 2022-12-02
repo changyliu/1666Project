@@ -38,6 +38,7 @@ def cost_func(solution, W, entering_times, leaving_times, beta=1):
     """
     Cost function for PDPTW.
 
+    W (tensor) : distance matrix (note that it must be tensor!)
     beta (int) : penalty factor of violating the time window constraint.    
     
     """

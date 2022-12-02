@@ -22,7 +22,7 @@ def check1PDPTW(soln, instance, return_now=True):
         for loc in Counter(soln):
             if Counter(soln)[loc] > 1:
                 error.append(f'LOCATION ERROR: location {loc} is visited {Counter(soln)[loc]} times')
-    
+
     capacity = instance['capacity']
 
     while (curLoc < len(soln) - 1):
@@ -39,7 +39,7 @@ def check1PDPTW(soln, instance, return_now=True):
         if (curTime < est) or (curTime > lft):
             tw_check = False
             error.append(f'TW ERROR: location {next_loc}, tw = ({est}, {lft}), arrival time = {curTime}')
-        
+
         curLoad += instance['demand'][soln[curLoc]-1]
         if curLoad > capacity:
             capacity_check = False
@@ -76,7 +76,7 @@ def check1PDPTW_all(soln, instance, return_now=False):
         for loc in Counter(soln):
             if Counter(soln)[loc] > 1:
                 error.append(f'LOCATION ERROR: location {loc} is visited {Counter(soln)[loc]} times')
-    
+
     capacity = instance['capacity']
 
     while (curLoc < len(soln) - 1):
@@ -95,7 +95,7 @@ def check1PDPTW_all(soln, instance, return_now=False):
             error_dict['violation'].append(min(curTime - est, lft - curTime))
             error_dict['range'].append([est, lft])
             error_dict['current'].append(curTime)
-        
+
         curLoad += instance['demand'][soln[curLoc]-1]
         if curLoad > capacity:
             capacity_check = False
@@ -126,18 +126,15 @@ def check1PDPTW_all(soln, instance, return_now=False):
 
     return precedence_check, tw_check, capacity_check, error, error_dict, curLoc, curTime
 
-# instance = read1PDPTW('test_data/generated-1113.txt')
-instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
-soln1039 = [1, 5, 9, 4, 8, 6, 7, 10, 2, 11, 3]
-soln11_0_opt = [1, 3, 11, 2, 5, 7, 8, 6, 4, 9, 10]
-soln2 = [1,3,7,11,9,2,4,5,6,10,8]
-# soln1 = [1, 10, 7, 11, 9, 2, 8, 3, 4]
-# soln2 = [1, 10, 7, 5, 9, 2, 5, 8, 6, 3, 4]
-# soln3 = [1, 5, 3, 7, 9, 10, 2, 4, 6, 8, 11]
-# precedence_check, tw_check, capacity_check, error, violatedLoc, curTime = check1PDPTW(soln1039, instance, return_now=False)
+if __name__ == "__main__":
+    # instance = read1PDPTW('test_data/generated-1113.txt')
+    instance = read1PDPTW('data/1PDPTW_generated_d11_i3000_sd2022_test/INSTANCES/generated-1000.txt')
+    soln1000 = [1, 7, 2, 8, 9, 3, 6, 5, 11, 10, 4]
+    soln11_0_opt = [1, 3, 11, 2, 5, 7, 8, 6, 4, 9, 10]
+    soln2 = [1,3,7,11,9,2,4,5,6,10,8]
+    # soln1 = [1, 10, 7, 11, 9, 2, 8, 3, 4]
+    # soln2 = [1, 10, 7, 5, 9, 2, 5, 8, 6, 3, 4]
+    # soln3 = [1, 5, 3, 7, 9, 10, 2, 4, 6, 8, 11]
+    precedence_check, tw_check, capacity_check, error, violatedLoc, curTime = check1PDPTW(soln1000, instance, return_now=False)
 
-# print(error)
-
-# precedence_check, tw_check, capacity_check, error, error_dict, violatedLoc, curTime = check1PDPTW_all(soln1039, instance, return_now=False)
-# print(pd.DataFrame(error_dict))
-# print(pd.DataFrame(error_dict)['loc'][0])
+    print(precedence_check, tw_check, capacity_check, error, violatedLoc, curTime)

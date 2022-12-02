@@ -17,7 +17,7 @@ def generateRandomSoln(dimension, solnHistory, rand_seed):
     seen = True
     while seen:
         newSoln = [1]
-        newSoln += random.sample(range(2, instance['numLocation'] + 1), instance['numLocation'] - 1)
+        newSoln += random.sample(range(2, dimension + 1), dimension - 1)
         if newSoln not in solnHistory:
             seen = False
     return newSoln
@@ -40,7 +40,7 @@ def localSearch(soln, instance, iterLimit, timeLimit, verbose=0):
         if not precedence_check: # insert associated pickup location before current delivery location
             newSoln.remove(instance['pickup'][soln[violatedLoc]-1])
             newSoln.insert(violatedLoc, instance['pickup'][soln[violatedLoc]-1])
-            
+
             # check if newSoln has been tried previously:
             if newSoln in solnHistory:
                 newSoln = generateRandomSoln(instance['numLocation'], solnHistory)
@@ -50,7 +50,7 @@ def localSearch(soln, instance, iterLimit, timeLimit, verbose=0):
             solnHistory.append(soln)
 
         elif not tw_check: # swap with neighbouring location
-            # if vehicle arrives too early    
+            # if vehicle arrives too early
             if locTime < instance['tw'][soln[violatedLoc] - 1][0]:
                 # check if cur location is pickup location and if next location is its delivery loc
                 if (instance['pickup'][soln[violatedLoc] - 1] == 0) and (soln[violatedLoc + 1] == instance['delivery'][soln[violatedLoc]-1]):
@@ -88,7 +88,7 @@ def localSearch(soln, instance, iterLimit, timeLimit, verbose=0):
                     else:
                         newSoln.remove(soln[violatedLoc - 1])
                         newSoln.insert(violatedLoc, soln[violatedLoc - 1])
-            
+
             # check if newSoln has been tried previously:
             if newSoln in solnHistory:
                 newSoln = generateRandomSoln(instance['numLocation'], solnHistory)
@@ -107,14 +107,14 @@ def localSearch(soln, instance, iterLimit, timeLimit, verbose=0):
                 else: # if it's a delivery location, then we remove its associated pickup location from pickupLoc, assuming we have no precedence violations until now
                     pickupLoc.remove(instance['pickup'][loc - 1])
                 # print(pickupLoc)
-            
+
             latestPickup = pickupLoc[-1]
             newSoln.remove(instance['delivery'][latestPickup - 1])
             newSoln.insert(violatedLoc, instance['delivery'][latestPickup - 1])
 
             # check if newSoln has been tried previously:
             if newSoln in solnHistory:
-                newSoln = generateRandomSoln(instance['numLocations'], solnHistory)
+                newSoln = generateRandomSoln(instance['numLocation'], solnHistory)
 
             precedence_check, tw_check, capacity_check, error, violatedLoc, locTime = check1PDPTW(newSoln, instance)
             soln = newSoln.copy()
@@ -149,7 +149,7 @@ def localSearchExtended(soln, instance, iterLimit, timeLimit, strategy = 0, verb
     newSoln = soln.copy()
     solnHistory = [soln]
 
-    while (not precedence_check or not tw_check or not capacity_check) and i < iterLimit and timeSpent < timeLimit and len(solnHistory) < math.factorial(instance['numLocation']-1):     
+    while (not precedence_check or not tw_check or not capacity_check) and i < iterLimit and timeSpent < timeLimit and len(solnHistory) < math.factorial(instance['numLocation']-1):
         violatedLoc, error = get_violated_loc(error_dict, strategy)
 
         if verbose:
@@ -162,7 +162,7 @@ def localSearchExtended(soln, instance, iterLimit, timeLimit, strategy = 0, verb
         if error['type'] == 'PRECEDENCE': # insert associated pickup location before current delivery location
             newSoln.remove(instance['pickup'][soln[violatedLoc]-1])
             newSoln.insert(violatedLoc, instance['pickup'][soln[violatedLoc]-1])
-            
+
             # check if newSoln has been tried previously:
             if newSoln in solnHistory:
                 num_dict['restart'] += 1
@@ -174,7 +174,7 @@ def localSearchExtended(soln, instance, iterLimit, timeLimit, strategy = 0, verb
             num_dict['precedence_violation'] += 1
 
         elif error['type'] == 'TW': # swap with neighbouring location
-            # if vehicle arrives too early    
+            # if vehicle arrives too early
             # print(error['range'])
             # print(instance['tw'][soln[violatedLoc] - 1])
             if error['current'] < instance['tw'][soln[violatedLoc] - 1][0]:
@@ -225,7 +225,7 @@ def localSearchExtended(soln, instance, iterLimit, timeLimit, strategy = 0, verb
                         newSoln.insert(violatedLoc, soln[violatedLoc - 1])
                         if verbose:
                             print('tw - move location ahead')
-            
+
             # check if newSoln has been tried previously:
             if newSoln in solnHistory:
                 newSoln = generateRandomSoln(instance['numLocation'], solnHistory, num_dict['restart'])
@@ -241,7 +241,7 @@ def localSearchExtended(soln, instance, iterLimit, timeLimit, strategy = 0, verb
                     pickupLoc.append(loc)
                 else: # if it's a delivery location, then we remove its associated pickup location from pickupLoc, assuming we have no precedence violations until now
                     pickupLoc.remove(instance['pickup'][loc - 1])
-            
+
             latestPickup = pickupLoc[-1]
             newSoln.remove(instance['delivery'][latestPickup - 1])
             newSoln.insert(violatedLoc, instance['delivery'][latestPickup - 1])
@@ -257,7 +257,7 @@ def localSearchExtended(soln, instance, iterLimit, timeLimit, strategy = 0, verb
         precedence_check, tw_check, capacity_check, error, error_dict, violatedLoc, locTime = check1PDPTW_all(newSoln, instance)
         soln = newSoln.copy()
         solnHistory.append(soln)
-        
+
         i += 1
         timeSpent = time.time() - startTime
 
@@ -283,7 +283,7 @@ def get_violated_loc(error_dict, strategy):
     elif strategy == 2:
         violatedLoc = error_df['loc'][error_df['violation'].idxmin()]
         error = error_df.loc[error_df['violation'].idxmin()]
-    
+
     return violatedLoc, error
 
 def cplex_MIP(rl_soln, instance, iterLimit, timeLimit, verbose=0):
@@ -325,13 +325,13 @@ def cplex_MIP(rl_soln, instance, iterLimit, timeLimit, verbose=0):
     # define s and q
     for i in V:
         for j in V:
-            mdl.add_constraint(s[j] >= s[i] + distMatrix[i][j] - M * ( 1- x[i,j])) 
-            mdl.add_constraint(s[i] + distMatrix[i][j] >= s[j] -  M * ( 1 - x[i,j])) 
+            mdl.add_constraint(s[j] >= s[i] + distMatrix[i][j] - M * ( 1- x[i,j]))
+            mdl.add_constraint(s[i] + distMatrix[i][j] >= s[j] -  M * ( 1 - x[i,j]))
             mdl.add_constraint(q[j] >= q[i] + instance['demand'][i] - M * ( 1- x[i,j]))
             mdl.add_constraint(q[i] + instance['demand'][i] >= q[j] - M * ( 1- x[i,j]))
     mdl.add_constraint(s[0] == 0) # make sure start time for depot is set to be 0
     mdl.add_constraint(q[0] == 0) # make sure load of vehicle is 0 at depot
-    
+
     # tw
     for i in V:
         mdl.add_constraint(instance['tw'][i][0] <= s[i])
@@ -344,7 +344,7 @@ def cplex_MIP(rl_soln, instance, iterLimit, timeLimit, verbose=0):
     # precedence
     for i in P:
         mdl.add_constraint(s[instance['delivery'][i] - 1] >= s[i] + distMatrix[i][instance['delivery'][i] - 1])
-   
+
     values = {x[i,j]: x_rl_soln[i][j] for i in V for j in V}
 
     warmstart=mdl.new_solution()
@@ -372,7 +372,7 @@ def cplex_MIP(rl_soln, instance, iterLimit, timeLimit, verbose=0):
         s_soln.append(s[nextLoc])
         tt.append(distMatrix[curLoc][nextLoc])
         curLoc = nextLoc
-    
+
     cost = computeCost(soln[0:-1], instance)
 
     print('\n')
@@ -397,9 +397,9 @@ if __name__ == "__main__":
     # soln3 = [1,10,7,11,9,5,6,2,8,3,4]
 
     soln1 = [1, 5, 9, 4, 8, 6, 7, 10, 2, 11, 3]
-    soln1039 = [1, 5, 9, 6, 10, 7, 4, 8, 2, 3, 11]
-    instance = read1PDPTW('test_data/generated-1039.txt')
-    
+    soln1113 = [1, 8, 7, 6, 10, 3, 9, 11, 4, 2, 5]
+    instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-1113.txt')
+
     # print(instance['tw'])
 
     # repairedSoln, cost, timeSpent = cplex_MIP(soln1039, instance, 200, 600, verbose=0)
@@ -419,6 +419,7 @@ if __name__ == "__main__":
 
     print('####### first violation #######')
     repairedSoln, numIter, timeSpent, num_dict, solnFeasibility = localSearchExtended(soln1039, instance, 500, 600, strategy = 0, verbose=0)
+
     cost = 999999
     if solnFeasibility:
         cost = computeCost(repairedSoln, instance)

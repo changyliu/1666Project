@@ -13,10 +13,10 @@ def getDistanceMatrix(instance):
         for j in range(instance['numLocation'] + 1):
             curRow.append(Distance_EUC_2D(instance['coordinates'][i], instance['coordinates'][j]))
         distMatrix.append(curRow)
-    
+
     return distMatrix
 
-def solve1PDPTW_MIP(instance):
+def solve1PDPTW_MIP(instance, logtoconsole=True):
 
     # prep data
     M = 999999
@@ -29,6 +29,8 @@ def solve1PDPTW_MIP(instance):
     instance['tw'].append(instance['tw'][0]) # add tw for artificial ending depot
 
     MIP = gp.Model('MIP')
+    if logtoconsole == False:
+        MIP.setParam('LogToConsole', 0)
 
     # variables
     x = MIP.addVars(V, V, vtype = gp.GRB.BINARY, name = 'x') # x_ij = 1 is location j is visited after location i
@@ -36,7 +38,7 @@ def solve1PDPTW_MIP(instance):
     q = MIP.addVars(V, vtype = gp.GRB.INTEGER, lb = 0, name = 'q') # load of vehicle when arriving to location
 
     # objective function: minimize the distance
-    MIP.setObjective(gp.quicksum(distMatrix[i][j] * x[i,j] for i in V for j in V), gp.GRB.MINIMIZE) 
+    MIP.setObjective(gp.quicksum(distMatrix[i][j] * x[i,j] for i in V for j in V), gp.GRB.MINIMIZE)
 
     # constraints
 
@@ -45,7 +47,7 @@ def solve1PDPTW_MIP(instance):
         MIP.addConstr(gp.quicksum(x[i,j] for j in (P + D + [len(V) - 1]) if i != j) == 1)
     for j in (P + D + [len(V) - 1]): # in
         MIP.addConstr(gp.quicksum(x[i,j] for i in (P + D + [0]) if i != j) == 1)
-    
+
     # # start and end at depot
     # MIP.addConstr(gp.quicksum(x[0,j] for j in (P + D + [len(V) - 1])) == 1)
     # MIP.addConstr(gp.quicksum(x[i,len(V) - 1] for i in (P + D + [0])) == 1)
@@ -53,13 +55,13 @@ def solve1PDPTW_MIP(instance):
     # define s and q
     for i in V:
         for j in V:
-            MIP.addConstr(s[j] >= s[i] + distMatrix[i][j] - M * ( 1- x[i,j])) 
-            MIP.addConstr(s[i] + distMatrix[i][j] >= s[j] -  M * ( 1 - x[i,j])) 
+            MIP.addConstr(s[j] >= s[i] + distMatrix[i][j] - M * ( 1- x[i,j]))
+            MIP.addConstr(s[i] + distMatrix[i][j] >= s[j] -  M * ( 1 - x[i,j]))
             MIP.addConstr(q[j] >= q[i] + instance['demand'][i] - M * ( 1- x[i,j]))
             MIP.addConstr(q[i] + instance['demand'][i] >= q[j] - M * ( 1- x[i,j]))
     MIP.addConstr(s[0] == 0) # make sure start time for depot is set to be 0
     MIP.addConstr(q[0] == 0) # make sure load of vehicle is 0 at depot
-    
+
     # tw
     for i in V:
         MIP.addConstr(instance['tw'][i][0] <= s[i])
@@ -72,7 +74,7 @@ def solve1PDPTW_MIP(instance):
     # precedence
     for i in P:
         MIP.addConstr(s[instance['delivery'][i] - 1] >= s[i] + distMatrix[i][instance['delivery'][i] - 1])
-   
+
     # optimizing
     MIP.optimize()
 
@@ -91,27 +93,29 @@ def solve1PDPTW_MIP(instance):
         s_soln.append(s[nextLoc].x)
         tt.append(distMatrix[curLoc][nextLoc])
         curLoc = nextLoc
-    
-    cost = computeCost(soln[0:-1], instance)
-    
 
-    print('\n')
-    print(soln)
-    print(f'Route: {route}')
-    print(f'Cost: {cost}')
+    cost = computeCost(soln[0:-1], instance)
+
+    if logtoconsole:
+        print('\n')
+        print(soln)
+        print(f'Route: {route}')
+        print(f'Cost: {cost}')
+        print(s_soln)
+
     # print(tt)
-    print(s_soln)
     # for i in V:
     #     print([x[i,j].x for j in V])
     # print(s[2].x)
     # print(instance['tw'][2])
 
-    return soln[0:-1], cost
+    solve_time = MIP.Runtime
 
+    return soln[0:-1], cost, solve_time, MIP.status
 
-
-
-instance = read1PDPTW('test_data/generated-1039.txt')
-# instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
-# print(getDistanceMatrix(instance))
-solve1PDPTW_MIP(instance)
+if __name__ == "__main__":
+    instance = read1PDPTW('data/1PDPTW_generated_d11_i3000_sd2022_test/INSTANCES/generated-1000.txt')
+    # instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
+    # print(getDistanceMatrix(instance))
+    soln, cost, solve_time, status = solve1PDPTW_MIP(instance)
+    print(soln, cost, solve_time, status)
