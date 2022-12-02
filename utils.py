@@ -119,3 +119,24 @@ def computeCost(soln, instance):
 
     totalTravelTime += Distance_EUC_2D(instance['coordinates'][soln[-1] - 1], instance['coordinates'][soln[0]]) # add time to return to depot
     return totalTravelTime
+
+def getDistanceMatrix(instance):
+    distMatrix = []
+    instance['coordinates'].append(instance['coordinates'][0]) # add coordinates of artificial ending depot
+    for i in range(instance['numLocation'] + 1):
+        curRow = []
+        for j in range(instance['numLocation'] + 1):
+            curRow.append(Distance_EUC_2D(instance['coordinates'][i], instance['coordinates'][j]))
+        distMatrix.append(curRow)
+    
+    return distMatrix
+
+def get_x_from_soln(soln):
+    x = np.zeros((len(soln)+1, len(soln)+1))
+
+    for i in range(len(soln)-1):
+        x[soln[i]-1][soln[i+1]-1] = 1
+    
+    return x
+
+# print(get_x_from_soln([1, 4, 5, 9, 10, 6, 8, 7, 2, 11, 3]))

@@ -4,6 +4,7 @@ from dataProcess import read1PDPTW
 from utils import computeCost
 
 
+
 def getDistanceMatrix(instance):
     distMatrix = []
     instance['coordinates'].append(instance['coordinates'][0]) # add coordinates of artificial ending depot
@@ -106,6 +107,8 @@ def solve1PDPTW_MIP(instance):
     # print(instance['tw'][2])
 
     return soln[0:-1], cost
+
+
 
 
 instance = read1PDPTW('test_data/generated-1039.txt')
