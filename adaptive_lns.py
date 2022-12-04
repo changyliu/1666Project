@@ -290,7 +290,8 @@ class ALNS_Solver():
         ne (int)       : the node that will be visited from the current node.
 
         """
-        return current.W[cur, ne] + max(t-current.L[ne], 0) + max(current.E[ne]-t, 0)
+        a = t + current.W[cur, ne] # actual arrival time
+        return current.W[cur, ne] + max(a-current.L[ne], 0) + max(current.E[ne]-a, 0)
 
     def get_last_unbroken_node(self, current):
         """

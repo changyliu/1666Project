@@ -6,9 +6,10 @@ import json
 import csv
 
 from dataProcess import read1PDPTW
-from exactModels import solve1PDPTW_MIP
+from exactModelsCplex import solve1PDPTW_MIP_CPLEX
 from Agent import RLAgent, RLAgent_repair, ALNSAgent
 from utils import float_to_str, dotdict
+from multiprocessing import Process
 
 import config as c
 config = c.config()
@@ -58,15 +59,15 @@ class Experiment():
         if self.method == 'mip':
             # Note that MIP cost considers only tour length, not time windows
             # If time window is violated, it returns infeasible
-            solution, cost, solve_time, status = solve1PDPTW_MIP(instance, logtoconsole=False)
-            if status == 2:
-                status = 'optimal'
-            elif status == 9:
-                status = 'feasible'
-            elif status == 3:
-                status = 'infeasible'
-            else:
-                raise ValueError
+            solution, cost, solve_time, status = solve1PDPTW_MIP_CPLEX(instance, logtoconsole=False)
+            # if status == 2:
+            #     status = 'optimal'
+            # elif status == 9:
+            #     status = 'feasible'
+            # elif status == 3:
+            #     status = 'infeasible'
+            # else:
+            #     raise ValueError
         elif self.method in ['rl', 'rl_repair', 'alns']:
             solution, cost, solve_time, status = self.agent.solve(instance)
         else:
@@ -184,13 +185,13 @@ class Experiment():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--method", type=str, default='rl_repair')
-    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d11_i3000_tmin100_tmax300_sd2022_test')
+    parser.add_argument("--method", type=str, default='mip')
+    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d21_i1000_tmin300_tmax500_sd2022_test')
 
     # RL args
-    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d11_i10000_tmin100_tmax300_sd2022")
+    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d21_i100000_tmin300_tmax500_sd2022")
     parser.add_argument("--emb-dim", type=int, default=20) # Embedding dimension D
-    parser.add_argument("--num-episodes", type=int, default=20001)
+    parser.add_argument("--num-episodes", type=int, default=30001)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=5e-3)
     parser.add_argument("--beta", type=int, default=1) # penalty factor for tw
@@ -222,5 +223,4 @@ if __name__ == "__main__":
     experiment = Experiment(agent_args, args.method, args.test_dataset)
     #instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-16.txt')
     solutions = experiment.run_all()
-
-    # save to csv, json
+    

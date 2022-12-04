@@ -4,11 +4,11 @@ import os
 import torch
 
 from dataProcess import read1PDPTW
-from solnCheck import check1PDPTW
+from solnCheck import check1PDPTW, check1PDPTW_all
 from models import init_model, gen_solution
 from utils import get_best_model, dotdict, float_to_str, cost_func, get_static_state
 
-from solnRepair import solnRepair
+from solnRepair import localSearchExtended, cplex_MIP
 from adaptive_lns import ALNS_Solver
 
 import time
@@ -32,7 +32,7 @@ class Agent(ABC):
     def get_status(self, instance, solution):
         # feasibility check
         _soln = [x+1 for x in solution]
-        p_check, tw_check, c_check, error, _, _ = check1PDPTW(_soln, instance, return_now=False)
+        p_check, tw_check, c_check, error, error_dict, curLoc, curTime = check1PDPTW_all(_soln, instance, return_now=False)
         if len(error) == 0:
             return 'feasible'
         else:
@@ -55,7 +55,7 @@ class ALNSAgent(Agent):
                         seed=self.args.seed
                         )
         alns_solver.build()
-        solution = alns_solver.solve()
+        solution = alns_solver.solve(iterations = 15000)
         end = time.time()
 
         cost = cost_func(solution, W, E, L, beta=self.args.beta)
@@ -111,7 +111,11 @@ class RLAgent_repair(RLAgent):
 
         if self.args.repair == 'ls':
             # local search
-            solution, numIter, timeSpent, feasible = solnRepair([x+1 for x in solution], instance, 5000, 600)
+            solution, numIter, timeSpent, feasible = localSearchExtended([x+1 for x in solution], instance, 5000, 600, strategy = self.args.repair_strategy)
+            solution = [x-1 for x in solution]
+        elif self.args.repair == 'mip_cplex':
+            # using cplex
+            solution, cost, timeSpent = cplex_MIP(rl_soln, instance, iterLimit, timeLimit, verbose=0):
             solution = [x-1 for x in solution]
         elif self.args.repair == 'alns':
             alns_solver = ALNS_Solver(
@@ -121,7 +125,7 @@ class RLAgent_repair(RLAgent):
                             beta=self.args.beta_alns
                             )
             alns_solver.build()
-            solution = alns_solver.resume(tour=solution)
+            solution = alns_solver.resume(tour=solution, iterations = 15000)
         else:
             raise NotImplementedError
 
@@ -145,9 +149,9 @@ if __name__ == "__main__":
         'lr'                   : 5e-3,
         'lr_decay_rate'        : 1. - 2e-5,
         'beta'                 : 1,
-        'repair'               : 'alns',
-
-        'beta_alns'             : 10,
+        'repair'               : 'mip_cplex',
+        'repair_strategy'      : 0
+        'beta_alns'            : 10,
         'epsilon'              : 0.05,
         'degree_of_destruction': 0.6,
 

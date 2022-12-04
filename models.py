@@ -21,7 +21,7 @@ def init_model(*args, model_name, fname=None, device=torch.device('cpu')):
     lr_scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=args.lr_decay_rate)
     
     if fname is not None:
-        checkpoint = torch.load(fname)
+        checkpoint = torch.load(fname, map_location=torch.device('cpu'))
         Q_net.load_state_dict(checkpoint['model'])
         optimizer.load_state_dict(checkpoint['optimizer'])
         lr_scheduler.load_state_dict(checkpoint['lr_scheduler'])

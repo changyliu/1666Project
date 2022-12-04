@@ -258,26 +258,26 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Model
-    parser.add_argument("--emb-dim", type=int, default=20) # Embedding dimension D
-    parser.add_argument("--emb-iter-T", type=int, default=1) # Number of embedding iterations T
+    parser.add_argument("--emb_dim", type=int, default=20) # Embedding dimension D
+    parser.add_argument("--emb_iter_T", type=int, default=1) # Number of embedding iterations T
 
     # Learning
-    parser.add_argument("--num-episodes", type=int, default=20001)
-    parser.add_argument("--mem-capacity", type=int, default=10000)
+    parser.add_argument("--num_episodes", type=int, default=20001)
+    parser.add_argument("--mem_capacity", type=int, default=10000)
     # Number of steps (n) in n-step Q-learning to wait before computing target reward estimate
-    parser.add_argument("--n-step-ql", type=int, default=2)
-    parser.add_argument("--batch-size", type=int, default=32)
+    parser.add_argument("--n_step_ql", type=int, default=2)
+    parser.add_argument("--batch_size", type=int, default=32)
 
     parser.add_argument("--gamma", type=float, default=0.95)
     parser.add_argument("--lr", type=float, default=5e-3)
-    parser.add_argument("--lr-decay-rate", type=float, default=1. - 2e-5) # learning rate decay
+    parser.add_argument("--lr_decay_rate", type=float, default=1. - 2e-5) # learning rate decay
 
-    parser.add_argument("--min-epsilon", type=float, default=0.1)
-    parser.add_argument("--epsilon-decay-rate", type=float, default=6e-4) # epsilon decay
+    parser.add_argument("--min_epsilon", type=float, default=0.1)
+    parser.add_argument("--epsilon_decay_rate", type=float, default=6e-4) # epsilon decay
 
     parser.add_argument("--beta", type=int, default=1) # penalty factor for tw
 
-    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d11_i10000_tmin100_tmax300_sd2022")
+    parser.add_argument("--dataset_name", type=str, default="1PDPTW_generated_d11_i10000_tmin100_tmax300_sd2022")
 
     parser.add_argument("--seed", type=int, default=0)
 
