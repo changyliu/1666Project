@@ -6,7 +6,7 @@ import json
 import csv
 
 from dataProcess import read1PDPTW
-from exactModelsCplex import solve1PDPTW_MIP_CPLEX
+from exactModels import solve1PDPTW_MIP
 from Agent import RLAgent, RLAgent_repair, ALNSAgent
 from utils import float_to_str, dotdict
 from multiprocessing import Process
@@ -20,7 +20,7 @@ class Experiment():
         self.method = method
         self.test_dataset = test_dataset
 
-        if method in ['rl', 'rl_repair']:
+        if method in ['rl', 'rl_repair', 'mip_cplex']:
             self.model_name = '{}_ed{}_ne{}_bs{}_lr{}_bt{}_sd{}'.format(
                             args.dataset_name,
                             args.emb_dim,
@@ -59,7 +59,7 @@ class Experiment():
         if self.method == 'mip':
             # Note that MIP cost considers only tour length, not time windows
             # If time window is violated, it returns infeasible
-            solution, cost, solve_time, status = solve1PDPTW_MIP_CPLEX(instance, logtoconsole=False)
+            solution, cost, solve_time, status = solve1PDPTW_MIP(instance, logtoconsole=False)
             # if status == 2:
             #     status = 'optimal'
             # elif status == 9:
@@ -111,6 +111,7 @@ class Experiment():
         result_filename = '{}_rp{}_trd{}_ed{}_ne{}_bs{}_lr{}_bt{}_dst{}_sd{}'.format(
                     self.method,
                     self.args.repair,
+                    self.args.repair_strategy,
                     self.args.dataset_name,
                     self.args.emb_dim,
                     self.args.num_episodes,
@@ -170,6 +171,7 @@ class Experiment():
         json_output['seed'] = self.args.seed
         json_output['feasible_rate'] = feasible_rate
         json_output['repair'] = self.args.repair
+        json_output['repair_strategy'] = self.args.repair_strategy
         json_output['beta_alns'] = self.args.beta_alns
         json_output['epsilon'] = self.args.beta_alns
         json_output['degree_of_destruction'] = self.args.degree_of_destruction
@@ -185,11 +187,11 @@ class Experiment():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--method", type=str, default='mip')
-    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d21_i1000_tmin300_tmax500_sd2022_test')
+    parser.add_argument("--method", type=str, default='rl_repair')
+    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d11_i3000_tmin100_tmax300_sd2022_test')
 
     # RL args
-    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d21_i100000_tmin300_tmax500_sd2022")
+    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d11_i100000_tmin100_tmax300_sd2022")
     parser.add_argument("--emb-dim", type=int, default=20) # Embedding dimension D
     parser.add_argument("--num-episodes", type=int, default=30001)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -210,8 +212,8 @@ if __name__ == "__main__":
         'lr_decay_rate'         : 1. - 2e-5,
         'beta'                  : args.beta,
 
-        'repair'                : 'alns',
-
+        'repair'                : 'mip_cplex',
+        'repair_strategy'       : -1,
         'beta_alns'             : 10,
         'epsilon'               : 0.05,
         'degree_of_destruction' : 0.6,

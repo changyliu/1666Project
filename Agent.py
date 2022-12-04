@@ -115,7 +115,7 @@ class RLAgent_repair(RLAgent):
             solution = [x-1 for x in solution]
         elif self.args.repair == 'mip_cplex':
             # using cplex
-            solution, cost, timeSpent = cplex_MIP(rl_soln, instance, iterLimit, timeLimit, verbose=0):
+            solution, cost, timeSpent = cplex_MIP([x+1 for x in solution], instance, 5000, 600, verbose=0)
             solution = [x-1 for x in solution]
         elif self.args.repair == 'alns':
             alns_solver = ALNS_Solver(
@@ -150,7 +150,7 @@ if __name__ == "__main__":
         'lr_decay_rate'        : 1. - 2e-5,
         'beta'                 : 1,
         'repair'               : 'mip_cplex',
-        'repair_strategy'      : 0
+        'repair_strategy'      : 0,
         'beta_alns'            : 10,
         'epsilon'              : 0.05,
         'degree_of_destruction': 0.6,

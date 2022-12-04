@@ -375,12 +375,12 @@ def cplex_MIP(rl_soln, instance, iterLimit, timeLimit, verbose=0):
 
     cost = computeCost(soln[0:-1], instance)
 
-    print('\n')
-    print(soln)
-    print(f'Route: {route}')
-    print(f'Cost: {cost}')
-    # print(tt)
-    print(s_soln)
+    # print('\n')
+    # print(soln)
+    # print(f'Route: {route}')
+    # print(f'Cost: {cost}')
+    # # print(tt)
+    # print(s_soln)
 
     # timeSpent = time.time() - startTime
 
