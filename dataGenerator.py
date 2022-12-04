@@ -5,10 +5,11 @@ from distance import Distance_EUC_2D
 from solnGenerator import generateFeasiblePDTour
 from dataProcess import read1PDPTW, read1PDPTW_tour
 from solnCheck import check1PDPTW
+from tqdm import tqdm
 
 def generate_1PDPTW(dimension, numInstance, randSeed, tw_min=100, tw_max=300, ext=''):
-    os.makedirs("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/INSTANCES".format(dimension, numInstance, tw_min, tw_max, randSeed, ext), exist_ok=True)
-    os.makedirs("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/TOURS".format(dimension, numInstance, tw_min, tw_max, randSeed, ext), exist_ok=True)
+    os.makedirs("/home/liucha90/scratch/1666project/data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/INSTANCES".format(dimension, numInstance, tw_min, tw_max, randSeed, ext), exist_ok=True)
+    os.makedirs("/home/liucha90/scratch/1666project/data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/TOURS".format(dimension, numInstance, tw_min, tw_max, randSeed, ext), exist_ok=True)
 
     vehicleNum = 1
     serviceTime = 0
@@ -17,7 +18,7 @@ def generate_1PDPTW(dimension, numInstance, randSeed, tw_min=100, tw_max=300, ex
 
     randomSeeds = [random.randint(0,5000) for i in range(numInstance)]
 
-    for i in range(numInstance):
+    for i in tqdm(range(numInstance)):
 
         random.seed(randomSeeds[i])
 
@@ -95,20 +96,20 @@ def generate_1PDPTW(dimension, numInstance, randSeed, tw_min=100, tw_max=300, ex
         lines.append('-1')
         lines.append('EOF')
 
-        f = open("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/INSTANCES/{}.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name), "w") # write instance file
+        f = open("/home/liucha90/scratch/1666project/data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/INSTANCES/{}.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name), "w") # write instance file
         for l in lines:
             # print(l)
             f.write(l + '\n')
         f.close()
 
-        f = open("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/TOURS/{}_feasible.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name), "w") # write solution file
+        f = open("/home/liucha90/scratch/1666project/data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/TOURS/{}_feasible.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name), "w") # write solution file
         f.write(str(cost) + '\n')
         f.write(' '.join(str(x) for x in solnTour))
         f.close()
 
         # solution check
-        instance = read1PDPTW("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/INSTANCES/{}.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name))
-        cost, tour = read1PDPTW_tour("./data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/TOURS/{}_feasible.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name))
+        instance = read1PDPTW("/home/liucha90/scratch/1666project/data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/INSTANCES/{}.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name))
+        cost, tour = read1PDPTW_tour("/home/liucha90/scratch/1666project/data/1PDPTW_generated_d{}_i{}_tmin{}_tmax{}_sd{}{}/TOURS/{}_feasible.txt".format(dimension, numInstance, tw_min, tw_max, randSeed, ext, name))
         precedence_check, tw_check, capacity_check, error, violatedLoc, curTime = check1PDPTW(tour, instance)
         if len(error) != 0:
             print("Generated tour is infeasible", error)
@@ -116,4 +117,5 @@ def generate_1PDPTW(dimension, numInstance, randSeed, tw_min=100, tw_max=300, ex
 
 
 #generate_1PDPTW(11, 1, 2022)
-generate_1PDPTW(11, 100000, 2022, tw_min=300, tw_max=500, ext='')
+# generate_1PDPTW(11, 100000, 2022, tw_min=300, tw_max=500, ext='')
+generate_1PDPTW(21, 1000, 2022, tw_min=300, tw_max=500, ext='_test')

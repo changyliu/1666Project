@@ -1,9 +1,8 @@
 import argparse
 from cmath import log
 import os
-import torch
-import json
 import csv
+from csv import writer
 
 from dataProcess import read1PDPTW
 from exactModelsCplex import solve1PDPTW_MIP_CPLEX
@@ -18,7 +17,7 @@ def to_csv(output_dict, path):
     """
     output_dict (dict) : dictionary object that stores experiment outputs.
     path (str)         : path to save the csv file.
-    
+
     """
     contents_names = ['instance', 'solution', 'cost', 'solve_time', 'status']
     output = []
@@ -37,35 +36,12 @@ def to_csv(output_dict, path):
         writer.writerow(contents_names)
         writer.writerows(output)
 
-def to_json(output_dict, path, dataset_name, feasible_rate=0.0):
-    """
-    output_dict (dict) : dictionary object that stores experiment outputs.
-    path (str)         : path to save the json file.
-    
-    """
-
-    json_output = dict()
-    json_output['method'] = 'mip'
-    json_output['test_dataset'] = dataset_name
-    json_output['feasible_rate'] = feasible_rate
-
-    output = []
-    for (key, val) in output_dict.items():
-        if key == 'status':
-            output.append(str(val))
-        else:
-            output.append(val)
-
-    json_output['results'] = output
-    with open(path, mode='wt', encoding='utf-8') as file:
-        json.dump(json_output, file, ensure_ascii=False, sort_keys=True, indent=2)
 
 def task(items):
     print(items[1])
     instance = read1PDPTW(os.path.join(items[0], items[1]))
     soln, cost, solve_time, status = solve1PDPTW_MIP_CPLEX(instance, timeLimit=600)
     result = {'filename':items[1], 'soln':soln, 'cost':cost, 'solve_time':solve_time, 'status':status}
-    print(result)
 
     return result
 
@@ -81,10 +57,19 @@ def runMIPall(*args):
     status_all = []
     dataset_path = os.path.join('/home/liucha90/workplace/1666Project', 'data', dataset_name, 'INSTANCES')
 
+    result_dir = os.path.join('/home/liucha90/workplace/1666Project', 'results', 'experiment', dataset_name)
+    os.makedirs(result_dir, exist_ok=True)
+    result_filename = '{}_rp{}_{}'.format(
+                'mip',
+                'none',
+                dataset_name,
+                )
+    csv_path = os.path.join(result_dir, '{}.csv'.format(result_filename))
+    csv_all_path = os.path.join(result_dir, '{}_all.csv'.format(result_filename))
+
     items = []
     for file in os.listdir(dataset_path):
         items.append((dataset_path,file))
-    print(items)
 
 
     with Pool() as pool:
@@ -96,15 +81,12 @@ def runMIPall(*args):
             costs.append(result['cost'])
             # print(result)
 
-    # with multiprocessing.Pool() as pool:
-	#     for result in pool.map(task, items):
-    #         # print(result)
-    #         filenames.append(results['filename'])
-    #         solutions.append(result['soln'])
-    #         solve_times.append(result['solve_time'])
-    #         status_all.append(result['status'])
-    #         costs.append(result['cost'])
-		    
+            print(list(result.values()))
+            with open(csv_path, 'a', newline='') as f:
+                writer_object = writer(f)
+                writer_object.writerow(list(result.values()))
+                f.close()
+           		    
     feasible_num = sum([1 for s in status_all if s in ['feasible', 'optimal']])
     feasible_rate = feasible_num / len(status_all)
 
@@ -118,19 +100,8 @@ def runMIPall(*args):
                 }
         output_dict[i] = data
 
-    # Save the results to json and csv
-    result_dir = os.path.join('/home/liucha90/workplace/1666Project', 'results', 'experiment', dataset_name)
-    os.makedirs(result_dir, exist_ok=True)
-    result_filename = '{}_rp{}_{}'.format(
-                'mip',
-                'none',
-                dataset_name,
-                )
-    # json_path = os.path.join(result_dir, '{}.json'.format(result_filename))
-    # to_json(output_dict, json_path, dataset_name, feasible_rate=feasible_rate, )
-
-    csv_path = os.path.join(result_dir, '{}.csv'.format(result_filename))
-    to_csv(output_dict, csv_path)
+   
+    to_csv(output_dict, csv_all_path)
 
 
 # runMIPall('1PDPTW_generated_d21_i1000_tmin300_tmax500_sd2022_test')
