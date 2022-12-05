@@ -46,4 +46,4 @@ source /home/liucha90/chang_pytorch/bin/activate
 #                 --seed "${seed}"
 
 
-python3.8 train.py --num_episodes 30001 --dataset_name "1PDPTW_generated_d15_i100000_tmin300_tmax500_sd2022" --seed 2
+python3.8 train_on_scratch.py --num_episodes 30001 --dataset_name "1PDPTW_generated_d15_i100000_tmin300_tmax500_sd2022" --seed 2

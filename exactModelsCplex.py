@@ -82,7 +82,7 @@ def solve1PDPTW_MIP_CPLEX(instance, timeLimit=600, verbose=0):
         tt = []
         for i in range(len(V) - 1):
             # print([int(x[curLoc,j].x) for j in V])
-            nextLoc = [int(x[curLoc,j]) for j in V].index(1)
+            nextLoc = [int(round(x[curLoc,j].solution_value)) for j in V].index(1)
             route += (f' -> {nextLoc + 1}')
             soln.append(nextLoc + 1)
             s_soln.append(s[nextLoc])

@@ -72,20 +72,22 @@ def runMIPall(*args):
         items.append((dataset_path,file))
 
 
-    with Pool() as pool:
-        for result in pool.map(task, items):
-            filenames.append(result['filename'])
-            solutions.append(result['soln'])
-            solve_times.append(result['solve_time'])
-            status_all.append(result['status'])
-            costs.append(result['cost'])
-            # print(result)
+    # with Pool() as pool:
+    #     for result in pool.map(task, items):
+    for item in items:
+        result = task(item)  
+        filenames.append(result['filename'])
+        solutions.append(result['soln'])
+        solve_times.append(result['solve_time'])
+        status_all.append(result['status'])
+        costs.append(result['cost'])
+        # print(result)
 
-            print(list(result.values()))
-            with open(csv_path, 'a', newline='') as f:
-                writer_object = writer(f)
-                writer_object.writerow(list(result.values()))
-                f.close()
+        print(list(result.values()))
+        with open(csv_path, 'a', newline='') as f:
+            writer_object = writer(f)
+            writer_object.writerow(list(result.values()))
+            f.close()
            		    
     feasible_num = sum([1 for s in status_all if s in ['feasible', 'optimal']])
     feasible_rate = feasible_num / len(status_all)
