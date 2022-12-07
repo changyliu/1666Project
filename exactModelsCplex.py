@@ -8,6 +8,7 @@ from dataProcess import read1PDPTW
 from solnCheck import check1PDPTW, check1PDPTW_all
 from utils import computeCost, getDistanceMatrix, get_x_from_soln
 from collections import defaultdict
+import math
 
 from docplex.mp.model import Model
 from docplex.util.environment import get_environment
@@ -23,7 +24,7 @@ def solve1PDPTW_MIP_CPLEX(instance, timeLimit=600, verbose=0):
     V = range(instance['numLocation'] + 1) # set of vertices, create extra vertex for returning to depot
     P = [loc - 1 for loc in instance['pickup'] if loc != 0]  # set of pickup locations
     D = [loc - 1 for loc in instance['delivery'] if loc != 0] # set of delivery locations
-
+    
     instance['demand'].append(0) # add 0 demand for artificial ending depot
     instance['tw'].append(instance['tw'][0]) # add tw for artificial ending depot
 
@@ -45,6 +46,7 @@ def solve1PDPTW_MIP_CPLEX(instance, timeLimit=600, verbose=0):
         mdl.add_constraint(mdl.sum(x[i,j] for j in (P + D + [len(V) - 1]) if i != j) == 1, 'out_once')
     for j in (P + D + [len(V) - 1]): # in
         mdl.add_constraint(mdl.sum(x[i,j] for i in (P + D + [0]) if i != j) == 1, 'in_once')
+
 
     # define s and q
     for i in V:
@@ -74,15 +76,20 @@ def solve1PDPTW_MIP_CPLEX(instance, timeLimit=600, verbose=0):
 
     
     if mdl.solve():
+        # print(mdl.get_solve_status())
         # get results
         soln = [0 + 1]
         curLoc = 0
         route = f'{0 + 1}'
         s_soln = [s[curLoc]]
         tt = []
+        # print([float(s[i]) for i in V])
+        # print([float(q[i]) for i in V])
+        # for i in V:
+        #     print([x[curLoc,j].solution_value for j in V])
         for i in range(len(V) - 1):
-            # print([int(x[curLoc,j].x) for j in V])
-            nextLoc = [int(x[curLoc,j]) for j in V].index(1)
+            # print([int(x[curLoc,j]) for j in V])
+            nextLoc = [int(round(x[curLoc,j].solution_value)) for j in V].index(1)
             route += (f' -> {nextLoc + 1}')
             soln.append(nextLoc + 1)
             s_soln.append(s[nextLoc])
@@ -98,7 +105,7 @@ def solve1PDPTW_MIP_CPLEX(instance, timeLimit=600, verbose=0):
     return soln[0:-1], cost, timeSpent, mdl.get_solve_status()
 
 if __name__ == "__main__":
-    instance = read1PDPTW('data/1PDPTW_generated_d21_i1000_tmin300_tmax500_sd2022_test/INSTANCES/generated-301.txt')
+    instance = read1PDPTW('data/1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test/INSTANCES/generated-140.txt')
     # instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
     # print(getDistanceMatrix(instance))
     soln, cost, solve_time, status = solve1PDPTW_MIP_CPLEX(instance, timeLimit = 10)

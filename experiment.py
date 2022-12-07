@@ -11,6 +11,8 @@ from Agent import RLAgent, RLAgent_repair, ALNSAgent
 from utils import float_to_str, dotdict
 from multiprocessing import Process
 
+from tqdm import tqdm
+
 import config as c
 config = c.config()
 
@@ -69,10 +71,10 @@ class Experiment():
             # else:
             #     raise ValueError
         elif self.method in ['rl', 'rl_repair', 'alns']:
-            solution, cost, solve_time, status = self.agent.solve(instance)
+            solution, cost, solve_time, status, num_iter, num_dict = self.agent.solve(instance)
         else:
             raise NotImplementedError
-        return solution, cost, solve_time, status
+        return solution, cost, solve_time, status, num_iter, num_dict
 
     def run_all(self):
         filenames = []
@@ -80,28 +82,35 @@ class Experiment():
         costs = []
         solve_times = []
         status_all = []
+
+        num_iter_all = []
+        num_dict_all = []
         dataset_path = os.path.join('.', config['DATA_DIR'], self.test_dataset, 'INSTANCES')
-        for file in os.listdir(dataset_path):
+        for file in tqdm(os.listdir(dataset_path)):
             print(file)
             instance = read1PDPTW(os.path.join(dataset_path, file))
-            soln, cost, solve_time, status = self.run(instance)
+            soln, cost, solve_time, status, num_iter, num_dict = self.run(instance)
 
             filenames.append(file)
             solutions.append(soln)
             solve_times.append(solve_time)
             status_all.append(status)
             costs.append(cost)
+            num_iter_all.append(num_iter)
+            num_dict_all.append(num_dict)
         
         feasible_num = sum([1 for s in status_all if s in ['feasible', 'optimal']])
         feasible_rate = feasible_num / len(status_all)
 
         output_dict = {}
-        for i, (file, soln, t, status, cost) in enumerate(zip(filenames, solutions, solve_times, status_all, costs)):
+        for i, (file, soln, t, status, cost, num_iter, num_dict) in enumerate(zip(filenames, solutions, solve_times, status_all, costs, num_iter_all, num_dict_all)):
             data = {'instance'  : file, 
                     'solution'  : [int(x) for x in soln],
                     'cost'      : cost,
                     'solve_time': t,
                     'status'    : status,
+                    'num_iter'  : num_iter,
+                    'num_dict'  : num_dict
                     }
             output_dict[i] = data
 
@@ -121,8 +130,8 @@ class Experiment():
                     float_to_str(self.args.degree_of_destruction),
                     self.args.seed
                     )
-        json_path = os.path.join(result_dir, '{}.json'.format(result_filename))
-        self.to_json(output_dict, json_path, feasible_rate=feasible_rate)
+        # json_path = os.path.join(result_dir, '{}.json'.format(result_filename))
+        # self.to_json(output_dict, json_path, feasible_rate=feasible_rate)
 
         csv_path = os.path.join(result_dir, '{}.csv'.format(result_filename))
         self.to_csv(output_dict, csv_path)
@@ -135,7 +144,7 @@ class Experiment():
         path (str)         : path to save the csv file.
         
         """
-        contents_names = ['instance', 'solution', 'cost', 'solve_time', 'status']
+        contents_names = ['instance', 'solution', 'cost', 'solve_time', 'status', 'num_iter','num_dict']
         output = []
         for (key, val) in output_dict.items():
             tmp = []
@@ -188,16 +197,16 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--method", type=str, default='rl_repair')
-    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d11_i3000_tmin100_tmax300_sd2022_test')
+    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test')
 
     # RL args
-    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d11_i100000_tmin100_tmax300_sd2022")
+    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d15_i100000_tmin300_tmax500_sd2022")
     parser.add_argument("--emb-dim", type=int, default=20) # Embedding dimension D
     parser.add_argument("--num-episodes", type=int, default=30001)
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=5e-3)
     parser.add_argument("--beta", type=int, default=1) # penalty factor for tw
-    parser.add_argument("--seed", type=int, default=6)
+    parser.add_argument("--seed", type=int, default=2)
 
     args, remaining = parser.parse_known_args()
 
@@ -213,7 +222,7 @@ if __name__ == "__main__":
         'beta'                  : args.beta,
 
         'repair'                : 'mip_cplex',
-        'repair_strategy'       : -1,
+        'repair_strategy'       : 0,
         'beta_alns'             : 10,
         'epsilon'               : 0.05,
         'degree_of_destruction' : 0.6,

@@ -240,7 +240,8 @@ def localSearchExtended(soln, instance, iterLimit, timeLimit, strategy = 0, verb
                 if instance['pickup'][loc - 1] == 0: # check if pickup location
                     pickupLoc.append(loc)
                 else: # if it's a delivery location, then we remove its associated pickup location from pickupLoc, assuming we have no precedence violations until now
-                    pickupLoc.remove(instance['pickup'][loc - 1])
+                    if instance['pickup'][loc - 1] in pickupLoc:
+                        pickupLoc.remove(instance['pickup'][loc - 1])
 
             latestPickup = pickupLoc[-1]
             newSoln.remove(instance['delivery'][latestPickup - 1])
@@ -398,7 +399,7 @@ if __name__ == "__main__":
 
     soln1 = [1, 5, 9, 4, 8, 6, 7, 10, 2, 11, 3]
     soln1113 = [1, 8, 7, 6, 10, 3, 9, 11, 4, 2, 5]
-    instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-1113.txt')
+    instance = read1PDPTW('data/1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test/INSTANCES/generated-345.txt')
 
     # print(instance['tw'])
 
@@ -417,32 +418,34 @@ if __name__ == "__main__":
     # print(f'Cost: {cost}')
     # print(f'Total iterations: {numIter}, Time Spent: {timeSpent}')
 
-    print('####### first violation #######')
-    repairedSoln, numIter, timeSpent, num_dict, solnFeasibility = localSearchExtended(soln1039, instance, 500, 600, strategy = 0, verbose=0)
+    soln1039 = [0, 8, 13, 7, 1, 5, 3, 12, 14, 4, 2, 10, 6, 11, 9]
 
-    cost = 999999
-    if solnFeasibility:
-        cost = computeCost(repairedSoln, instance)
-    print('\n')
-    print(repairedSoln)
-    print(f'Cost: {cost}')
-    print(f'Iterations: {numIter}')
-    print(f'Time Spent: {timeSpent}')
-    print('Number of restart: ', num_dict['restart'])
+    # print('####### first violation #######')
+    # repairedSoln, numIter, timeSpent, num_dict, solnFeasibility = localSearchExtended(soln1039, instance, 500, 600, strategy = 0, verbose=0)
 
-    print('####### most violation #######')
-    repairedSoln, numIter, timeSpent, num_dict, solnFeasibility = localSearchExtended(soln1039, instance, 500, 600, strategy = 1, verbose=0)
-    cost = 999999
-    if solnFeasibility:
-        cost = computeCost(repairedSoln, instance)
-    print('\n')
-    print(repairedSoln)
-    print(f'Cost: {cost}')
-    print(f'Iterations: {numIter}')
-    print(f'Time Spent: {timeSpent}')
-    print('Number of restart: ', num_dict['restart'])
+    # cost = 999999
+    # if solnFeasibility:
+    #     cost = computeCost(repairedSoln, instance)
+    # print('\n')
+    # print(repairedSoln)
+    # print(f'Cost: {cost}')
+    # print(f'Iterations: {numIter}')
+    # print(f'Time Spent: {timeSpent}')
+    # print('Number of restart: ', num_dict['restart'])
 
-    print('####### least irst violation #######')
+    # print('####### most violation #######')
+    # repairedSoln, numIter, timeSpent, num_dict, solnFeasibility = localSearchExtended(soln1039, instance, 500, 600, strategy = 1, verbose=0)
+    # cost = 999999
+    # if solnFeasibility:
+    #     cost = computeCost(repairedSoln, instance)
+    # print('\n')
+    # print(repairedSoln)
+    # print(f'Cost: {cost}')
+    # print(f'Iterations: {numIter}')
+    # print(f'Time Spent: {timeSpent}')
+    # print('Number of restart: ', num_dict['restart'])
+
+    print('####### least violation #######')
     repairedSoln, numIter, timeSpent, num_dict, solnFeasibility = localSearchExtended(soln1039, instance, 500, 600, strategy = 2, verbose=0)
     cost = 999999
     if solnFeasibility:
