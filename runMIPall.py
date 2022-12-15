@@ -10,6 +10,10 @@ from Agent import RLAgent, RLAgent_repair, ALNSAgent
 from utils import float_to_str, dotdict
 from multiprocessing import Pool
 
+from tqdm import tqdm
+import time
+
+
 import config as c
 config = c.config()
 
@@ -55,9 +59,9 @@ def runMIPall(*args):
     costs = []
     solve_times = []
     status_all = []
-    dataset_path = os.path.join('/home/liucha90/workplace/1666Project', 'data', dataset_name, 'INSTANCES')
+    dataset_path = os.path.join('.', 'data', dataset_name, 'INSTANCES')
 
-    result_dir = os.path.join('/home/liucha90/workplace/1666Project', 'results', 'experiment', dataset_name)
+    result_dir = os.path.join('.', 'results', 'experiment', dataset_name)
     os.makedirs(result_dir, exist_ok=True)
     result_filename = '{}_rp{}_{}'.format(
                 'mip',
@@ -74,16 +78,18 @@ def runMIPall(*args):
 
     # with Pool() as pool:
     #     for result in pool.map(task, items):
-    for item in items:
-        result = task(item)  
+    for item in tqdm(items):
+        start = time.time()
+        result = task(item)    
+        end = time.time()
         filenames.append(result['filename'])
         solutions.append(result['soln'])
-        solve_times.append(result['solve_time'])
+        solve_times.append(end-start)
         status_all.append(result['status'])
         costs.append(result['cost'])
         # print(result)
 
-        print(list(result.values()))
+        # print(list(result.values()))
         with open(csv_path, 'a', newline='') as f:
             writer_object = writer(f)
             writer_object.writerow(list(result.values()))
@@ -112,7 +118,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Model
-    parser.add_argument("--dataset_name", type=str, default='1PDPTW_generated_d21_i1000_tmin300_tmax500_sd2022_test')
+    parser.add_argument("--dataset_name", type=str, default='1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test')
 
     args, remaining = parser.parse_known_args()
 

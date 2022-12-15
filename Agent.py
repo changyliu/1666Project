@@ -2,11 +2,12 @@ from abc import ABC, abstractmethod
 
 import os
 import torch
+import numpy as np
 
 from dataProcess import read1PDPTW
 from solnCheck import check1PDPTW, check1PDPTW_all
 from models import init_model, gen_solution
-from utils import get_best_model, dotdict, float_to_str, cost_func, get_static_state
+from utils import get_best_model, dotdict, float_to_str, computeCost, get_static_state
 
 from solnRepair import localSearchExtended, cplex_MIP
 from adaptive_lns import ALNS_Solver
@@ -31,8 +32,9 @@ class Agent(ABC):
 
     def get_status(self, instance, solution):
         # feasibility check
-        _soln = [x+1 for x in solution]
-        p_check, tw_check, c_check, error, error_dict, curLoc, curTime = check1PDPTW_all(_soln, instance, return_now=False)
+        # _soln = [x+1 for x in solution]
+
+        p_check, tw_check, c_check, error, error_dict, curLoc, curTime = check1PDPTW_all(solution, instance, return_now=False)
         if len(error) == 0:
             return 'feasible'
         else:
@@ -56,11 +58,16 @@ class ALNSAgent(Agent):
                         )
         alns_solver.build()
         solution = alns_solver.solve(iterations = 15000)
+        solution = [x+1 for x in solution]
         end = time.time()
 
-        cost = cost_func(solution, W, E, L, beta=self.args.beta)
+        cost = computeCost(solution, instance)
         status = self.get_status(instance, solution)
-        return solution, cost, end-start, status
+
+        numIter = np.NAN
+        num_dict = np.NAN
+
+        return solution, cost, end-start, status, numIter, num_dict
 
 class RLAgent(Agent):
     def __init__(self, *args, model_dir, device=torch.device('cpu')):
@@ -88,10 +95,14 @@ class RLAgent(Agent):
                                         device=self.device
                                         )
         end = time.time()
+        solution = [x+1 for x in solution]
 
-        cost = cost_func(solution, W, E, L, beta=self.args.beta)
+        cost = computeCost(solution, instance)
         status = self.get_status(instance, solution)
-        return solution, cost, end-start, status
+        numIter = np.NAN
+        num_dict = np.NAN
+        
+        return solution, cost, end-start, status, numIter, num_dict
 
 class RLAgent_repair(RLAgent):
     def __init__(self, *args, model_dir, device=torch.device('cpu')):
@@ -104,19 +115,20 @@ class RLAgent_repair(RLAgent):
                                         instance, 
                                         device=self.device
                                         )
-
-        #print("solution (before): ", solution)
+        # print("solution (before): ", solution)
         #precedence_check, tw_check, capacity_check, error, violatedLoc, locTime = check1PDPTW(solution, instance, return_now=False)
         #print(precedence_check, tw_check, capacity_check, error, violatedLoc, locTime)
 
         if self.args.repair == 'ls':
             # local search
-            solution, numIter, timeSpent, feasible = localSearchExtended([x+1 for x in solution], instance, 5000, 600, strategy = self.args.repair_strategy)
-            solution = [x-1 for x in solution]
+            solution, numIter, timeSpent, num_dict, feasible = localSearchExtended([x+1 for x in solution], instance, 5000, 600, strategy = self.args.repair_strategy)
+            # solution = [x-1 for x in solution]
         elif self.args.repair == 'mip_cplex':
             # using cplex
             solution, cost, timeSpent = cplex_MIP([x+1 for x in solution], instance, 5000, 600, verbose=0)
-            solution = [x-1 for x in solution]
+            # solution = [x-1 for x in solution]
+            numIter = np.NAN
+            num_dict = np.NAN
         elif self.args.repair == 'alns':
             alns_solver = ALNS_Solver(
                             instance, 
@@ -126,6 +138,9 @@ class RLAgent_repair(RLAgent):
                             )
             alns_solver.build()
             solution = alns_solver.resume(tour=solution, iterations = 15000)
+            solution = [x+1 for x in solution]
+            numIter = np.NAN
+            num_dict = np.NAN
         else:
             raise NotImplementedError
 
@@ -134,9 +149,9 @@ class RLAgent_repair(RLAgent):
         #precedence_check, tw_check, capacity_check, error, violatedLoc, locTime = check1PDPTW(solution, instance, return_now=False)
         #print(precedence_check, tw_check, capacity_check, error, violatedLoc, locTime)
 
-        cost = cost_func(solution, W, E, L, beta=self.args.beta)
+        cost = computeCost(solution, instance)
         status = self.get_status(instance, solution)
-        return solution, cost, end-start, status
+        return solution, cost, end-start, status, numIter, num_dict
 
 if __name__ == "__main__":
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
@@ -149,7 +164,7 @@ if __name__ == "__main__":
         'lr'                   : 5e-3,
         'lr_decay_rate'        : 1. - 2e-5,
         'beta'                 : 1,
-        'repair'               : 'mip_cplex',
+        'repair'               : 'ls',
         'repair_strategy'      : 0,
         'beta_alns'            : 10,
         'epsilon'              : 0.05,
@@ -169,8 +184,9 @@ if __name__ == "__main__":
                     )
     model_dir = os.path.join('.', config['MODEL_DIR'], model_name)
 
-    agent = RLAgent_repair(args, model_dir=model_dir, device=device)
+    agent = RLAgent(args, model_dir=model_dir, device=device)
+    # agent = ALNSAgent(args)
     #agent = ALNSAgent(args)
-    instance = read1PDPTW('data/1PDPTW_generated_d11_i3000_tmin100_tmax300_sd2022_test/INSTANCES/generated-3.txt')
+    instance = read1PDPTW('data/1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test/INSTANCES/generated-519.txt')
     solution = agent.solve(instance)
     print(solution)

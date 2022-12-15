@@ -3,3 +3,5 @@ LKH-3.0.7/
 __pycache__/
 .pyc
 models/
+results/
+notebooks/
