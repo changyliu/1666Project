@@ -4,6 +4,7 @@ from ALNS.alns.criteria import HillClimbing, SimulatedAnnealing
 
 import copy
 import itertools
+import random
 
 import numpy as np
 
@@ -75,7 +76,7 @@ class TspState_dist(State):
         return sum([node[1][self.edges[node][0]] for node in self.nodes])
 
 class TspState_v2(State):
-    def __init__(self, coords, W, solution, capacity, demands, pickup, delivery, E, L, beta=10):
+    def __init__(self, coords, W, solution, capacity, demands, pickup, delivery, E, L, beta=10, cost_func='tw'):
         self.coords = coords
         self.W = W
         self.solution = solution
@@ -91,13 +92,15 @@ class TspState_v2(State):
         self.L = L # latest arrival time
 
         self.beta = beta # penalty factor
+        self.cost_func = cost_func # 'tw' if we only minimize tw violation
 
     def copy(self):
         return deepcopy(self)
 
     def objective(self):
-        #return total_distance(self.solution, self.W)
-        return cost_func(self.solution, self.W, self.E, self.L, beta=self.beta)
+        if -1 in self.solution: # incomplete solution
+            return float('inf')
+        return cost_func(self.solution, self.W, self.E, self.L, beta=self.beta, mode=self.cost_func)
     
     def time_window_violation(self):
         return time_window_violation(self)
@@ -123,16 +126,20 @@ def time_window_violation(state):
 
 class ALNS_Solver():
     def __init__(self, instance, degree_of_destruction=0.25, criterion='HillClimbing', 
-                    epsilon=0.05, beta=10, early_stopping=True, seed=0, verbose=0):
+                    epsilon=0.05, beta=10, early_stopping=True, seed=0, cost_func='tw', verbose=0):
         self.instance = instance
         self.degree_of_destruction = degree_of_destruction
         self.epsilon = epsilon # epsilon greedy
         self.beta = beta # penalty factor for tw violation
 
         self.early_stopping = early_stopping # stop the algorithm if no improvement is made for a while
-        self.stop_iter = 1000 # stop if no improvement is made for 1000 iterations
+        self.stop_iter = 10000 # stop if no improvement is made for 10000 iterations
+
+        self.cost_func = cost_func # if 'tw', it only minimizes time window violations
 
         self.seed = seed
+        random.seed(seed)
+        np.random.seed(seed)
 
         self.verbose = verbose
 
@@ -291,7 +298,11 @@ class ALNS_Solver():
 
         """
         a = t + current.W[cur, ne] # actual arrival time
-        return current.W[cur, ne] + max(a-current.L[ne], 0) + max(current.E[ne]-a, 0)
+        tw_violation = self.beta * (max(a-current.L[ne], 0) + max(current.E[ne]-a, 0))
+        if self.cost_func == 'tw':
+            return tw_violation
+        else:
+            return current.W[cur, ne] + tw_violation
 
     def get_last_unbroken_node(self, current):
         """
@@ -318,48 +329,66 @@ class ALNS_Solver():
             return current
         
         assert current.solution[0] == 0, "start is not depot. solution={}".format(current.solution) # starts from depot
-        cur_idx, cur_node = self.get_last_unbroken_node(current)
+        cur_idx = 0
+        cur_node = current.solution[cur_idx]
+        current.load = 0
 
         # current time
         t = 0
-        for i in range(cur_idx - 1):
-            t += current.W[current.solution[i], 
-                            current.solution[i+1]]
         while -1 in current.solution:
-            # Feasible set for the next node. Node i is feasible if:
-            #1) there's a path from the last node in the partial solution to i
-            #2) i is not in the partial solution
-            #3) if it is a delivery node, pick up is done
-            #4) load will not exceed the capacity.
-            feasible = [i for i in range(len(current.coords))
-                        if len(current.solution) == 0 or current.W[cur_node, i] > 0
-                        if i not in current.solution
-                        if current.pickup[i] == 0 or (current.pickup[i] - 1) in current.solution
-                        if current.load + current.demands[i] <= current.capacity]
+            if current.solution[cur_idx+1] == -1: # unbroken
+                # Feasible set for the next node. Node i is feasible if:
+                #1) there's a path from the last node in the partial solution to i
+                #2) i is not in the partial solution
+                #3) if it is a delivery node, pick up is done
+                #4) load will not exceed the capacity.
+                feasible = [i for i in range(len(current.coords))
+                            if len(current.solution) == 0 or current.W[cur_node, i] > 0
+                            if i not in current.solution
+                            if current.pickup[i] == 0 or (current.pickup[i] - 1) in current.solution
+                            if current.load + current.demands[i] <= current.capacity]
+                if len(feasible) == 0: # search failed
+                    return current
 
-            objVals = [self.compute_cost(current, t, cur_node, f) for f in feasible]
+                objVals = [self.compute_cost(current, t, cur_node, f) for f in feasible]
 
-            # Choose the next node epsilon greedily
-            if np.random.rand() < self.epsilon:
-                greedy_best = np.random.choice(feasible)
-            else:
-                greedy_best = feasible[np.argmin(objVals)]
+                # Choose the next node epsilon greedily
+                if np.random.rand() < self.epsilon:
+                    greedy_best = np.random.choice(feasible)
+                else:
+                    greedy_best = feasible[np.argmin(objVals)]
 
-            current.solution[cur_idx + 1] = greedy_best
+                current.solution[cur_idx + 1] = greedy_best
 
-            t += current.W[cur_node, greedy_best]
-            current.load += current.demands[greedy_best]
-            cur_idx, cur_node = self.get_last_unbroken_node(current)
+            t += current.W[cur_node, current.solution[cur_idx+1]]
+            cur_idx += 1
+            cur_node = current.solution[cur_idx]
+            current.load += current.demands[cur_node]
+
+            if current.load > current.capacity:
+                # make it an incomplete solution so that it is rejected by LNS
+                current.solution[cur_idx] = -1
+                return current
 
         return current
     
     def build(self):
         coords, capacity, demands, pickup, delivery, W, E, L = get_static_state(self.instance)
-        current = [-1 if i != 0 else 0 for i in range(len(coords))]
-        self.state = TspState_v2(coords, W, current, capacity, demands, pickup, delivery, E, L)
 
-        self.random_state = np.random.RandomState(self.seed)
-        self.initial_solution = self.greedy_repair(self.state, self.random_state)
+        current = [-1 if i != 0 else 0 for i in range(len(coords))]
+        self.initial_solution = TspState_v2(
+                                    coords, W, current, capacity, demands, pickup, delivery, 
+                                    E, L, beta=self.beta, cost_func=self.cost_func
+                                    )
+
+        while -1 in self.initial_solution.solution:
+            current = [-1 if i != 0 else 0 for i in range(len(coords))]
+            self.state = TspState_v2(
+                            coords, W, current, capacity, demands, pickup, delivery, 
+                            E, L, beta=self.beta, cost_func=self.cost_func
+                            )
+            self.random_state = np.random.RandomState(self.seed)
+            self.initial_solution = self.greedy_repair(self.state, self.random_state)
 
         total_dist = total_distance(self.initial_solution.solution, W)
         if self.verbose:
@@ -394,11 +423,13 @@ class ALNS_Solver():
         self.initial_solution.solution = tour
 
 if __name__ == "__main__":
-    ins_num = 5
-    instance = read1PDPTW('data/1PDPTW_generated_d11_i3000_tmin100_tmax300_sd2022_test/INSTANCES/generated-{}.txt'.format(ins_num))
-    alns_solver = ALNS_Solver(instance, degree_of_destruction=0.6, epsilon=0.05, early_stopping=True, verbose=1)
+    ins_num = 57
+    print("instance", ins_num)
+    instance = read1PDPTW('data/1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test/INSTANCES/generated-{}.txt'.format(ins_num))
+    alns_solver = ALNS_Solver(instance, seed=0, beta=10, cost_func='tw', degree_of_destruction=0.6, epsilon=0.05, early_stopping=False, verbose=1)
     alns_solver.build()
     alns_solver.solve(iterations=20000)
+    print("")
 
     #tour = [0, 4, 5, 1, 2, 9, 7, 3, 10, 6, 8]
     #alns_agent.solution_sharing(tour)

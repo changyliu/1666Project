@@ -34,7 +34,7 @@ def float_to_str(val):
 def moving_avg(x, N=10):
     return np.convolve(np.array(x), np.ones((N,))/N, mode='valid')
 
-def cost_func(solution, W, entering_times, leaving_times, beta=1):
+def cost_func(solution, W, entering_times, leaving_times, mode='tw', beta=1):
     """
     Cost function for PDPTW.
 
@@ -57,7 +57,10 @@ def cost_func(solution, W, entering_times, leaving_times, beta=1):
         
         penalty.append(max(a-l, 0) + max(e-a, 0))
 
-    return total_distance(solution, W) + beta * sum(penalty)
+    if mode == 'tw':
+        return beta * sum(penalty)
+    else:
+        return total_distance(solution, W) + beta * sum(penalty)
 
 def total_distance(solution, W):
     if len(solution) < 2:

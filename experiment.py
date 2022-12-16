@@ -87,7 +87,7 @@ class Experiment():
         num_dict_all = []
         dataset_path = os.path.join('.', config['DATA_DIR'], self.test_dataset, 'INSTANCES')
         for file in tqdm(os.listdir(dataset_path)):
-            print(file)
+            #print(file)
             instance = read1PDPTW(os.path.join(dataset_path, file))
             soln, cost, solve_time, status, num_iter, num_dict = self.run(instance)
 
@@ -117,7 +117,7 @@ class Experiment():
         # Save the results to json and csv
         result_dir = os.path.join('.', config['RESULT_DIR'], 'experiment', self.test_dataset)
         os.makedirs(result_dir, exist_ok=True)
-        result_filename = '{}_rp{}_trd{}_ed{}_ne{}_bs{}_lr{}_bt{}_dst{}_sd{}'.format(
+        result_filename = '{}_rp{}_rs{}_trd{}_ed{}_ne{}_bs{}_lr{}_bt{}_dst{}_cf{}_sd{}'.format(
                     self.method,
                     self.args.repair,
                     self.args.repair_strategy,
@@ -128,6 +128,7 @@ class Experiment():
                     float_to_str(self.args.lr),
                     self.args.beta,
                     float_to_str(self.args.degree_of_destruction),
+                    self.args.cost_func_alns,
                     self.args.seed
                     )
         # json_path = os.path.join(result_dir, '{}.json'.format(result_filename))
@@ -221,11 +222,12 @@ if __name__ == "__main__":
         'lr_decay_rate'         : 1. - 2e-5,
         'beta'                  : args.beta,
 
-        'repair'                : 'mip_cplex',
+        'repair'                : 'alns',
         'repair_strategy'       : 0,
-        'beta_alns'             : 10,
+        'beta_alns'             : 1000,
         'epsilon'               : 0.05,
         'degree_of_destruction' : 0.6,
+        'cost_func_alns'        : 'all',
 
         'seed'         : args.seed,
         'device'       : device

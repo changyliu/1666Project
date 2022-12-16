@@ -49,4 +49,4 @@ def Distance_LARGE(locA, locB):
 def Distance_EUC_2D(locA, locB):
     xd = locA[0] - locB[0]
     yd = locA[1] - locB[1]
-    return int(math.sqrt(xd * xd + yd * yd))
+    return math.sqrt(xd * xd + yd * yd)
