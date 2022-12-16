@@ -97,7 +97,7 @@ def get_static_state(instance):
         demands = instance['demand']
         pickup = instance['pickup']
         delivery = instance['delivery']
-        W = distance_matrix(coords, coords)
+        W = distance_matrix(coords, coords).astype(int)
 
         E = []
         L = []
