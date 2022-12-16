@@ -207,6 +207,7 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", type=int, default=32)
     parser.add_argument("--lr", type=float, default=5e-3)
     parser.add_argument("--beta", type=int, default=1) # penalty factor for tw
+    parser.add_argument("--cost-func-alns", type=str, default='all')
     parser.add_argument("--seed", type=int, default=2)
 
     args, remaining = parser.parse_known_args()
@@ -226,8 +227,8 @@ if __name__ == "__main__":
         'repair_strategy'       : 0,
         'beta_alns'             : 1000,
         'epsilon'               : 0.05,
-        'degree_of_destruction' : 0.6,
-        'cost_func_alns'        : 'all',
+        'degree_of_destruction' : 0.4,
+        'cost_func_alns'        : args.cost_func_alns,
 
         'seed'         : args.seed,
         'device'       : device

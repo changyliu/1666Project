@@ -54,7 +54,7 @@ class ALNSAgent(Agent):
                         degree_of_destruction=self.args.degree_of_destruction, 
                         epsilon=self.args.epsilon,
                         beta=self.args.beta_alns,
-                        cost_func=args.cost_func_alns, 
+                        cost_func=self.args.cost_func_alns, 
                         seed=self.args.seed
                         )
         alns_solver.build()
@@ -171,7 +171,7 @@ if __name__ == "__main__":
         'repair_strategy'      : 0,
         'beta_alns'            : 10,
         'epsilon'              : 0.05,
-        'degree_of_destruction': 0.6,
+        'degree_of_destruction': 0.4,
         'cost_func_alns'       : 'all',
 
         'seed'                 : 2
