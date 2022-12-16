@@ -216,7 +216,7 @@ class ALNS:
                 statistics.collect_destroy_operator(d_name, weight_idx)
                 statistics.collect_repair_operator(r_name, weight_idx)
             
-            if early_stopping and (iteration - best_iter) > stop_iter:
+            if early_stopping and (iteration - best_iter) > stop_iter or current.objective() == 0.0:
                 if verbose:
                     print("Early stopping")
                 break
@@ -319,7 +319,9 @@ class ALNS:
 
         if candidate.objective() < best.objective():
             if verbose:
-                print("current", iteration, candidate.objective(), candidate.solution, candidate.time_window_violation())
+                print("Iteraion {}: obj={}, sol={}, tw_violation={}".
+                    format(iteration, candidate.objective(), candidate.solution, sum(candidate.time_window_violation()))
+                    )
             # Is a new global best, so we might want to do something to further
             # improve the solution.
             if _ON_BEST in self._callbacks:
