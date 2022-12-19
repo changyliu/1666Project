@@ -290,6 +290,9 @@ def get_violated_loc(error_dict, strategy):
 def cplex_MIP(rl_soln, instance, iterLimit, timeLimit, verbose=0):
     # TODO: add time and iteration limits
 
+    # print(rl_soln)
+    # print(instance)
+
     x_rl_soln = get_x_from_soln(rl_soln)
 
     startTime = time.time()
@@ -365,9 +368,14 @@ def cplex_MIP(rl_soln, instance, iterLimit, timeLimit, verbose=0):
     route = f'{0 + 1}'
     s_soln = [s[curLoc]]
     tt = []
+    # for i in V:
+    #     print(i, ": ", [float(x[i,j]) for j in V])
+    #     print(i, ": ", [int(x[i,j]) for j in V])
+
+
     for i in range(len(V) - 1):
-        # print([int(x[curLoc,j].x) for j in V])
-        nextLoc = [int(x[curLoc,j]) for j in V].index(1)
+        # print([int(x[curLoc,j]) for j in V])
+        nextLoc = [int(round(x[curLoc,j].solution_value)) for j in V].index(1)
         route += (f' -> {nextLoc + 1}')
         soln.append(nextLoc + 1)
         s_soln.append(s[nextLoc])
@@ -397,9 +405,9 @@ if __name__ == "__main__":
     # soln2 = [1,10,9,11,5,2,8,3,4,7,6]
     # soln3 = [1,10,7,11,9,5,6,2,8,3,4]
 
-    soln1 = [1, 5, 9, 4, 8, 6, 7, 10, 2, 11, 3]
-    soln1113 = [1, 8, 7, 6, 10, 3, 9, 11, 4, 2, 5]
-    instance = read1PDPTW('data/1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test/INSTANCES/generated-345.txt')
+    # soln1 = [1, 5, 9, 4, 8, 6, 7, 10, 2, 11, 3]
+    # soln1113 = [1, 8, 7, 6, 10, 3, 9, 11, 4, 2, 5]
+    # instance = read1PDPTW('data/1PDPTW_generated_d31_i200_tmin300_tmax500_sd2022_test/INSTANCES/generated-96.txt')
 
     # print(instance['tw'])
 
@@ -418,7 +426,7 @@ if __name__ == "__main__":
     # print(f'Cost: {cost}')
     # print(f'Total iterations: {numIter}, Time Spent: {timeSpent}')
 
-    soln1039 = [0, 8, 13, 7, 1, 5, 3, 12, 14, 4, 2, 10, 6, 11, 9]
+    # soln1039 = [0, 8, 13, 7, 1, 5, 3, 12, 14, 4, 2, 10, 6, 11, 9]
 
     # print('####### first violation #######')
     # repairedSoln, numIter, timeSpent, num_dict, solnFeasibility = localSearchExtended(soln1039, instance, 500, 600, strategy = 0, verbose=0)
@@ -444,15 +452,17 @@ if __name__ == "__main__":
     # print(f'Iterations: {numIter}')
     # print(f'Time Spent: {timeSpent}')
     # print('Number of restart: ', num_dict['restart'])
+    soln = [1, 6, 13, 27, 17, 25, 30, 11, 9, 16, 3, 5, 15, 26, 4, 28, 29, 8, 21, 31, 14, 7, 12, 20, 23, 24, 10, 22, 2, 18, 19]
+    instance = read1PDPTW('data/1PDPTW_generated_d31_i200_tmin300_tmax500_sd2022_test/INSTANCES/generated-96.txt')
 
-    print('####### least violation #######')
-    repairedSoln, numIter, timeSpent, num_dict, solnFeasibility = localSearchExtended(soln1039, instance, 500, 600, strategy = 2, verbose=0)
-    cost = 999999
-    if solnFeasibility:
-        cost = computeCost(repairedSoln, instance)
+    # print('####### least violation #######')
+    repairedSoln, cost, timeSpent = cplex_MIP(soln, instance, 500, 600, verbose=0)
+    # cost = 999999
+    # if solnFeasibility:
+    #     cost = computeCost(repairedSoln, instance)
     print('\n')
     print(repairedSoln)
     print(f'Cost: {cost}')
-    print(f'Iterations: {numIter}')
+    # print(f'Iterations: {numIter}')
     print(f'Time Spent: {timeSpent}')
-    print('Number of restart: ', num_dict['restart'])
+    # print('Number of restart: ', num_dict['restart'])

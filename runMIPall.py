@@ -9,6 +9,7 @@ from exactModelsCplex import solve1PDPTW_MIP_CPLEX
 from Agent import RLAgent, RLAgent_repair, ALNSAgent
 from utils import float_to_str, dotdict
 from multiprocessing import Pool
+from datetime import datetime
 
 from tqdm import tqdm
 import time
@@ -53,20 +54,22 @@ def runMIPall(*args):
     args = args[0]
 
     dataset_name = args.dataset_name
+    batch_num = args.batch_num
     
     filenames = []
     solutions = []
     costs = []
     solve_times = []
     status_all = []
-    dataset_path = os.path.join('.', 'data', dataset_name, 'INSTANCES')
+    dataset_path = os.path.join('/home/liucha90/scratch/1666project', 'data', dataset_name, 'INSTANCES', batch_num)
 
     result_dir = os.path.join('.', 'results', 'experiment', dataset_name)
     os.makedirs(result_dir, exist_ok=True)
-    result_filename = '{}_rp{}_{}'.format(
+    result_filename = '{}_rp{}_{}_{}'.format(
                 'mip',
                 'none',
                 dataset_name,
+                batch_num
                 )
     csv_path = os.path.join(result_dir, '{}.csv'.format(result_filename))
     csv_all_path = os.path.join(result_dir, '{}_all.csv'.format(result_filename))
@@ -92,7 +95,8 @@ def runMIPall(*args):
         # print(list(result.values()))
         with open(csv_path, 'a', newline='') as f:
             writer_object = writer(f)
-            writer_object.writerow(list(result.values()))
+            csv_line = [datetime.fromtimestamp(end), result['filename'], [int(x) for x in result['soln']], result['cost'], end-start, result['status']]
+            writer_object.writerow(csv_line)
             f.close()
            		    
     feasible_num = sum([1 for s in status_all if s in ['feasible', 'optimal']])
@@ -118,7 +122,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     # Model
-    parser.add_argument("--dataset_name", type=str, default='1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test')
+    parser.add_argument("--dataset_name", type=str, default='1PDPTW_generated_d31_i200_tmin300_tmax500_sd2022_test')
+    parser.add_argument("--batch_num", type=str, default='batch2')
+
 
     args, remaining = parser.parse_known_args()
 

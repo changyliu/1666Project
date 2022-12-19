@@ -1,6 +1,7 @@
 import numpy as np
 import os
-from scipy.spatial import distance_matrix
+# from scipy.spatial import distance_matrix
+from dataProcess import read1PDPTW
 import math
 
 import config as c
@@ -15,7 +16,7 @@ def get_best_model(model_dir):
     Get file with smallest cost in the model directory.
 
     model_dir (str) : path to the model directory
-    
+
     """
 
     all_lengths_fnames = [f for f in os.listdir(model_dir) if f.endswith('.tar')]
@@ -26,7 +27,7 @@ def get_best_model(model_dir):
 def float_to_str(val):
     """
     e.x) 0.5 --> '05'
-    
+
     """
 
     return str(val).replace('.', '')
@@ -39,8 +40,8 @@ def cost_func(solution, W, entering_times, leaving_times, mode='tw', beta=1):
     Cost function for PDPTW.
 
     W (tensor) : distance matrix (note that it must be tensor!)
-    beta (int) : penalty factor of violating the time window constraint.    
-    
+    beta (int) : penalty factor of violating the time window constraint.
+
     """
 
     if len(solution) < 2:
@@ -54,7 +55,7 @@ def cost_func(solution, W, entering_times, leaving_times, mode='tw', beta=1):
         l = leaving_times[solution[i+1]]
         #if arriving_time < e:
         #    arriving_time = e
-        
+
         penalty.append(max(a-l, 0) + max(e-a, 0))
 
     if mode == 'tw':
@@ -67,11 +68,11 @@ def cost_func(solution, W, entering_times, leaving_times, mode='tw', beta=1):
 def total_distance(solution, W):
     if len(solution) < 2:
         return 0  # there is no travel
-    
+
     total_dist = 0
     for i in range(len(solution) - 1):
         total_dist += W[solution[i], solution[i+1]].item()
-        
+
     # if this solution is "complete", go back to initial point
     if len(solution) == W.shape[0]:
         total_dist += W[solution[-1], solution[0]].item()
@@ -99,7 +100,8 @@ def get_static_state(instance):
         demands = instance['demand']
         pickup = instance['pickup']
         delivery = instance['delivery']
-        W = distance_matrix(coords, coords).astype(int)
+        # W = distance_matrix(coords, coords)
+        W = getDistanceMatrixRL(instance)
 
         E = []
         L = []
@@ -126,6 +128,17 @@ def computeCost(soln, instance):
     totalTravelTime += Distance_EUC_2D(instance['coordinates'][soln[-1] - 1], instance['coordinates'][soln[0]]) # add time to return to depot
     return totalTravelTime
 
+def getDistanceMatrixRL(instance):
+    distMatrix = []
+    # instance['coordinates'].append(instance['coordinates'][0]) # add coordinates of artificial ending depot
+    for i in range(instance['numLocation']):
+        curRow = []
+        for j in range(instance['numLocation']):
+            curRow.append(Distance_EUC_2D(instance['coordinates'][i], instance['coordinates'][j]))
+        distMatrix.append(curRow)
+
+    return distMatrix
+
 def getDistanceMatrix(instance):
     distMatrix = []
     instance['coordinates'].append(instance['coordinates'][0]) # add coordinates of artificial ending depot
@@ -134,7 +147,7 @@ def getDistanceMatrix(instance):
         for j in range(instance['numLocation'] + 1):
             curRow.append(Distance_EUC_2D(instance['coordinates'][i], instance['coordinates'][j]))
         distMatrix.append(curRow)
-    
+
     return distMatrix
 
 def get_x_from_soln(soln):
@@ -142,7 +155,11 @@ def get_x_from_soln(soln):
 
     for i in range(len(soln)-1):
         x[soln[i]-1][soln[i+1]-1] = 1
-    
+
     return x
 
 # print(get_x_from_soln([1, 4, 5, 9, 10, 6, 8, 7, 2, 11, 3]))
+
+# instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
+# print(get_static_state(instance))
+# print(getDistanceMatrixRL(instance))

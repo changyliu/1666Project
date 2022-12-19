@@ -1,8 +1,8 @@
 #!/bin/bash
 
 #SBATCH --nodes=1
-#SBATCH --ntasks=4
-#SBATCH --time=5:59:00
+#SBATCH --ntasks=2
+#SBATCH --time=11:59:00
 #SBATCH --output=%N-%j.out
 #SBATCH --account=rrg-khalile2
 #SBATCH --mail-user=changy.liu@mail.utoronto.ca

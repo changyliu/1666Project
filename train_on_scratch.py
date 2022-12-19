@@ -277,7 +277,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--beta", type=int, default=1) # penalty factor for tw
 
-    parser.add_argument("--dataset_name", type=str, default="1PDPTW_generated_d11_i10000_tmin100_tmax300_sd2022")
+    parser.add_argument("--dataset_name", type=str, default="1PDPTW_generated_d15_i100000_tmin300_tmax500_sd2022")
 
     parser.add_argument("--seed", type=int, default=0)
 
