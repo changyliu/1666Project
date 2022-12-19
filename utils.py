@@ -1,6 +1,7 @@
 import numpy as np
 import os
-from scipy.spatial import distance_matrix
+# from scipy.spatial import distance_matrix
+from dataProcess import read1PDPTW
 import math
 
 import config as c
@@ -94,7 +95,8 @@ def get_static_state(instance):
         demands = instance['demand']
         pickup = instance['pickup']
         delivery = instance['delivery']
-        W = distance_matrix(coords, coords)
+        # W = distance_matrix(coords, coords)
+        W = getDistanceMatrixRL(instance)
 
         E = []
         L = []
@@ -121,6 +123,17 @@ def computeCost(soln, instance):
     totalTravelTime += Distance_EUC_2D(instance['coordinates'][soln[-1] - 1], instance['coordinates'][soln[0]]) # add time to return to depot
     return totalTravelTime
 
+def getDistanceMatrixRL(instance):
+    distMatrix = []
+    # instance['coordinates'].append(instance['coordinates'][0]) # add coordinates of artificial ending depot
+    for i in range(instance['numLocation']):
+        curRow = []
+        for j in range(instance['numLocation']):
+            curRow.append(Distance_EUC_2D(instance['coordinates'][i], instance['coordinates'][j]))
+        distMatrix.append(curRow)
+    
+    return distMatrix
+
 def getDistanceMatrix(instance):
     distMatrix = []
     instance['coordinates'].append(instance['coordinates'][0]) # add coordinates of artificial ending depot
@@ -141,3 +154,7 @@ def get_x_from_soln(soln):
     return x
 
 # print(get_x_from_soln([1, 4, 5, 9, 10, 6, 8, 7, 2, 11, 3]))
+
+# instance = read1PDPTW('data/1PDPTW_generated/INSTANCES/generated-11-0.txt')
+# print(get_static_state(instance))
+# print(getDistanceMatrixRL(instance))

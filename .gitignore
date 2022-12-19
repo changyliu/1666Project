@@ -1,7 +1,10 @@
 data/
 LKH-3.0.7/
 __pycache__/
-.pyc
+*.pyc
 models/
 results/
 notebooks/
+*.out
+*.csv
+*.json
