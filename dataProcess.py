@@ -21,7 +21,7 @@ import re
 #    (line 16) dataset=f'{dataset_name}'
 # 5. Execute the shell script
 #     $LKH-3.0.8 ./runAll_PDPTW_ours
-# 6. Copy 'INSTANCES_LKH' in f'LKH-3.0.8/{dataset_name}'
+# 6. Copy 'INSTANCES_LKH' in f'LKH-3.0.8/{dataset_name}' to ./data/
 # 7. Run the get_results_LKH() function
 #     get_results_LKH(f'{dataset_name}')
 # ------------------------------------------------------------------
