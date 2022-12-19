@@ -87,17 +87,18 @@ class Experiment():
         num_dict_all = []
         dataset_path = os.path.join('.', config['DATA_DIR'], self.test_dataset, 'INSTANCES')
         for file in tqdm(os.listdir(dataset_path)):
-            #print(file)
-            instance = read1PDPTW(os.path.join(dataset_path, file))
-            soln, cost, solve_time, status, num_iter, num_dict = self.run(instance)
+            if not file.startswith('.'):
+                print(file)
+                instance = read1PDPTW(os.path.join(dataset_path, file))
+                soln, cost, solve_time, status, num_iter, num_dict = self.run(instance)
 
-            filenames.append(file)
-            solutions.append(soln)
-            solve_times.append(solve_time)
-            status_all.append(status)
-            costs.append(cost)
-            num_iter_all.append(num_iter)
-            num_dict_all.append(num_dict)
+                filenames.append(file)
+                solutions.append(soln)
+                solve_times.append(solve_time)
+                status_all.append(status)
+                costs.append(cost)
+                num_iter_all.append(num_iter)
+                num_dict_all.append(num_dict)
         
         feasible_num = sum([1 for s in status_all if s in ['feasible', 'optimal']])
         feasible_rate = feasible_num / len(status_all)
@@ -198,10 +199,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--method", type=str, default='rl_repair')
-    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test')
+    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d51_i200_tmin300_tmax500_sd2022_test')
 
     # RL args
-    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d15_i100000_tmin300_tmax500_sd2022")
+    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d31_i300000_tmin300_tmax500_sd2022")
     parser.add_argument("--emb-dim", type=int, default=20) # Embedding dimension D
     parser.add_argument("--num-episodes", type=int, default=30001)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -223,8 +224,8 @@ if __name__ == "__main__":
         'lr_decay_rate'         : 1. - 2e-5,
         'beta'                  : args.beta,
 
-        'repair'                : 'alns',
-        'repair_strategy'       : 0,
+        'repair'                : 'mip_cplex',
+        'repair_strategy'       : -1,
         'beta_alns'             : 1000,
         'epsilon'               : 0.05,
         'degree_of_destruction' : 0.4,

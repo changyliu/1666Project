@@ -8,3 +8,4 @@ notebooks/
 *.out
 *.csv
 *.json
+figures/

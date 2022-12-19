@@ -152,7 +152,10 @@ class RLAgent_repair(RLAgent):
         #precedence_check, tw_check, capacity_check, error, violatedLoc, locTime = check1PDPTW(solution, instance, return_now=False)
         #print(precedence_check, tw_check, capacity_check, error, violatedLoc, locTime)
 
-        cost = computeCost(solution, instance)
+        if len(solution) > 0:
+            cost = computeCost(solution, instance)
+        else:
+            cost = np.NAN
         status = self.get_status(instance, solution)
         return solution, cost, end-start, status, numIter, num_dict
 
