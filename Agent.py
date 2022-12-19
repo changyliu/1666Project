@@ -54,6 +54,7 @@ class ALNSAgent(Agent):
                         degree_of_destruction=self.args.degree_of_destruction, 
                         epsilon=self.args.epsilon,
                         beta=self.args.beta_alns,
+                        cost_func=self.args.cost_func_alns, 
                         seed=self.args.seed
                         )
         alns_solver.build()
@@ -134,7 +135,9 @@ class RLAgent_repair(RLAgent):
                             instance, 
                             degree_of_destruction=self.args.degree_of_destruction, 
                             epsilon=self.args.epsilon,
-                            beta=self.args.beta_alns
+                            beta=self.args.beta_alns,
+                            cost_func='tw', # alns-repair always minimizes tw violation only
+                            verbose=0
                             )
             alns_solver.build()
             solution = alns_solver.resume(tour=solution, iterations = 15000)
@@ -156,7 +159,7 @@ class RLAgent_repair(RLAgent):
 if __name__ == "__main__":
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
     args = dotdict({
-        'dataset_name': '1PDPTW_generated_d11_i100000_tmin100_tmax300_sd2022',
+        'dataset_name': '1PDPTW_generated_d15_i100000_tmin300_tmax500_sd2022',
         'emb_dim'              : 20,
         'emb_iter_T'           : 1,
         'num_episodes'         : 30001,
@@ -164,13 +167,14 @@ if __name__ == "__main__":
         'lr'                   : 5e-3,
         'lr_decay_rate'        : 1. - 2e-5,
         'beta'                 : 1,
-        'repair'               : 'ls',
+        'repair'               : 'alns',
         'repair_strategy'      : 0,
         'beta_alns'            : 10,
         'epsilon'              : 0.05,
-        'degree_of_destruction': 0.6,
+        'degree_of_destruction': 0.4,
+        'cost_func_alns'       : 'all',
 
-        'seed'                 : 6
+        'seed'                 : 2
     })
 
     model_name = '{}_ed{}_ne{}_bs{}_lr{}_bt{}_sd{}'.format(
@@ -184,9 +188,9 @@ if __name__ == "__main__":
                     )
     model_dir = os.path.join('.', config['MODEL_DIR'], model_name)
 
-    agent = RLAgent(args, model_dir=model_dir, device=device)
+    agent = RLAgent_repair(args, model_dir=model_dir, device=device)
     # agent = ALNSAgent(args)
     #agent = ALNSAgent(args)
-    instance = read1PDPTW('data/1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test/INSTANCES/generated-519.txt')
-    solution = agent.solve(instance)
-    print(solution)
+    ins_num = 74
+    instance = read1PDPTW('data/1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test/INSTANCES/generated-{}.txt'.format(ins_num))
+    solution, cost, solve_time, status, numIter, num_dict = agent.solve(instance)
