@@ -1,0 +1,36 @@
+#!/bin/bash
+# Usage: ./run_PDPTW class name max_trials runs [ optimum ]
+
+if [ -z "$3" ]; then
+    echo "./run_PDPTW name max_trials runs [ optimum ]"
+    exit
+fi
+
+lkh="./LKH"
+name=$1
+max_trials=$2
+runs=$3
+optimum=$4
+par=TMP/$name.pid$$.par
+
+dataset="1PDPTW_generated_d51_i200_tmin300_tmax500_sd2022_test"
+
+mkdir -p TOURS
+mkdir -p TOURS/$class
+mkdir -p TMP
+
+echo "SPECIAL" > $par
+echo "PROBLEM_FILE = $dataset/INSTANCES_LKH/$name.pdptw" >> $par
+echo "MAX_TRIALS = $max_trials" >> $par
+echo "RUNS = $runs" >> $par
+# echo "TOUR_FILE = TOURS/$class/$name.$.tour" >> $par
+echo "TRACE_LEVEL = 1" >> $par
+
+if [ -n "$optimum" ]; then
+    echo "OPTIMUM = $optimum" >> $par
+fi
+
+$lkh $par
+
+/bin/rm -f $par
+# /bin/rm -rf TMP

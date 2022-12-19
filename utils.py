@@ -59,6 +59,8 @@ def cost_func(solution, W, entering_times, leaving_times, mode='tw', beta=1):
 
     if mode == 'tw':
         return beta * sum(penalty)
+    elif mode == 'dist':
+        return total_distance(solution, W)
     else:
         return total_distance(solution, W) + beta * sum(penalty)
 
