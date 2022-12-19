@@ -11,6 +11,7 @@ from utils import get_best_model, dotdict, float_to_str, computeCost, get_static
 
 from solnRepair import localSearchExtended, cplex_MIP
 from adaptive_lns import ALNS_Solver
+from heuristics import construction_heuristic
 
 import time
 
@@ -39,6 +40,38 @@ class Agent(ABC):
             return 'feasible'
         else:
             return 'infeasible'
+
+class HeuristicAgent(Agent):
+    """
+    Construction heuristic with a local search atop.
+
+    Based on the following paper with using our local search instead of tabu search:
+    https://link.springer.com/article/10.1023/A:1012204504849
+    
+    """
+
+    def __init__(self, *args):
+        super().__init__()
+        self.args = args[0]
+
+    def solve(self, instance):
+        start = time.time()
+        solution = construction_heuristic(instance)
+        if self.args.heuristic_ls == True:
+            solution, numIter, timeSpent, num_dict, _ = \
+                localSearchExtended(solution, instance, 10000, 600, strategy = 2, verbose=0)
+        else:
+            numIter = np.NAN
+            num_dict = np.NAN
+        end = time.time()
+
+        if len(solution) > 0:
+            cost = computeCost(solution, instance)
+        else:
+            cost = np.NAN
+        status = self.get_status(instance, solution)
+
+        return solution, cost, end-start, status, numIter, num_dict
 
 class ALNSAgent(Agent):
     def __init__(self, *args):
@@ -176,6 +209,7 @@ if __name__ == "__main__":
         'epsilon'              : 0.05,
         'degree_of_destruction': 0.4,
         'cost_func_alns'       : 'all',
+        'heuristic_ls'         : True,
 
         'seed'                 : 2
     })
@@ -191,9 +225,9 @@ if __name__ == "__main__":
                     )
     model_dir = os.path.join('.', config['MODEL_DIR'], model_name)
 
-    agent = RLAgent_repair(args, model_dir=model_dir, device=device)
-    # agent = ALNSAgent(args)
-    #agent = ALNSAgent(args)
+    #agent = RLAgent_repair(args, model_dir=model_dir, device=device)
+    agent = HeuristicAgent(args)
     ins_num = 74
-    instance = read1PDPTW('data/1PDPTW_generated_d15_i1000_tmin300_tmax500_sd2022_test/INSTANCES/generated-{}.txt'.format(ins_num))
+    instance = read1PDPTW('data/1PDPTW_generated_d31_i200_tmin300_tmax500_sd2022_test/INSTANCES/generated-{}.txt'.format(ins_num))
     solution, cost, solve_time, status, numIter, num_dict = agent.solve(instance)
+    print(solution, cost, solve_time, status, numIter, num_dict)
