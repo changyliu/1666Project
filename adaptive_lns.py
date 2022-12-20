@@ -342,6 +342,7 @@ class ALNS_Solver():
                 #2) i is not in the partial solution
                 #3) if it is a delivery node, pick up is done
                 #4) load will not exceed the capacity.
+                # print(current.W)
                 feasible = [i for i in range(len(current.coords))
                             if len(current.solution) == 0 or current.W[cur_node, i] > 0
                             if i not in current.solution

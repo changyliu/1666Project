@@ -135,7 +135,7 @@ def getDistanceMatrixRL(instance):
             curRow.append(Distance_EUC_2D(instance['coordinates'][i], instance['coordinates'][j]))
         distMatrix.append(curRow)
 
-    return distMatrix
+    return np.array(distMatrix)
 
 def getDistanceMatrix(instance):
     distMatrix = []

@@ -199,10 +199,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
 
     parser.add_argument("--method", type=str, default='rl_repair')
-    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d51_i200_tmin300_tmax500_sd2022_test')
+    parser.add_argument("--test-dataset", type=str, default='1PDPTW_generated_d31_i200_tmin300_tmax500_sd2022_test')
 
     # RL args
-    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d31_i300000_tmin300_tmax500_sd2022")
+    parser.add_argument("--dataset-name", type=str, default="1PDPTW_generated_d15_i300000_tmin300_tmax500_sd2022")
     parser.add_argument("--emb-dim", type=int, default=20) # Embedding dimension D
     parser.add_argument("--num-episodes", type=int, default=30001)
     parser.add_argument("--batch-size", type=int, default=32)
@@ -224,7 +224,7 @@ if __name__ == "__main__":
         'lr_decay_rate'         : 1. - 2e-5,
         'beta'                  : args.beta,
 
-        'repair'                : 'mip_cplex',
+        'repair'                : 'alns',
         'repair_strategy'       : -1,
         'beta_alns'             : 1000,
         'epsilon'               : 0.05,
