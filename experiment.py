@@ -7,7 +7,7 @@ import csv
 
 from dataProcess import read1PDPTW
 from exactModels import solve1PDPTW_MIP
-from Agent import RLAgent, RLAgent_repair, ALNSAgent
+from Agent import RLAgent, RLAgent_repair, ALNSAgent, HeuristicAgent
 from utils import float_to_str, dotdict
 from multiprocessing import Process
 
@@ -49,6 +49,8 @@ class Experiment():
                 raise NotImplementedError
         elif method == 'alns':
             self.agent = ALNSAgent(args)
+        elif method == 'heuristic':
+            self.agent = HeuristicAgent(args)
         else:
             raise NotImplementedError
     
@@ -70,7 +72,7 @@ class Experiment():
             #     status = 'infeasible'
             # else:
             #     raise ValueError
-        elif self.method in ['rl', 'rl_repair', 'alns']:
+        elif self.method in ['rl', 'rl_repair', 'alns', 'heuristic']:
             solution, cost, solve_time, status, num_iter, num_dict = self.agent.solve(instance)
         else:
             raise NotImplementedError
@@ -118,7 +120,7 @@ class Experiment():
         # Save the results to json and csv
         result_dir = os.path.join('.', config['RESULT_DIR'], 'experiment', self.test_dataset)
         os.makedirs(result_dir, exist_ok=True)
-        result_filename = '{}_rp{}_rs{}_trd{}_ed{}_ne{}_bs{}_lr{}_bt{}_dst{}_cf{}_sd{}'.format(
+        result_filename = '{}_rp{}_rs{}_trd{}_ed{}_ne{}_bs{}_lr{}_bt{}_dst{}_cf{}_hls{}_sd{}'.format(
                     self.method,
                     self.args.repair,
                     self.args.repair_strategy,
@@ -130,6 +132,7 @@ class Experiment():
                     self.args.beta,
                     float_to_str(self.args.degree_of_destruction),
                     self.args.cost_func_alns,
+                    int(self.args.heuristic_ls),
                     self.args.seed
                     )
         # json_path = os.path.join(result_dir, '{}.json'.format(result_filename))
@@ -209,6 +212,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=5e-3)
     parser.add_argument("--beta", type=int, default=1) # penalty factor for tw
     parser.add_argument("--cost-func-alns", type=str, default='all')
+    parser.add_argument('--heuristic-ls', action='store_false') # True by default
     parser.add_argument("--seed", type=int, default=2)
 
     args, remaining = parser.parse_known_args()
@@ -230,6 +234,7 @@ if __name__ == "__main__":
         'epsilon'               : 0.05,
         'degree_of_destruction' : 0.4,
         'cost_func_alns'        : args.cost_func_alns,
+        'heuristic_ls'          : args.heuristic_ls,
 
         'seed'         : args.seed,
         'device'       : device
