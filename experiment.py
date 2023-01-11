@@ -212,7 +212,7 @@ if __name__ == "__main__":
     parser.add_argument("--lr", type=float, default=5e-3)
     parser.add_argument("--beta", type=int, default=1) # penalty factor for tw
     parser.add_argument("--cost-func-alns", type=str, default='all')
-    parser.add_argument('--heuristic-ls', action='store_false') # True by default
+    parser.add_argument('--heuristic-ls', action='store_false', default = True) # True by default
     parser.add_argument("--seed", type=int, default=2)
 
     args, remaining = parser.parse_known_args()
@@ -228,8 +228,8 @@ if __name__ == "__main__":
         'lr_decay_rate'         : 1. - 2e-5,
         'beta'                  : args.beta,
 
-        'repair'                : 'alns',
-        'repair_strategy'       : -1,
+        'repair'                : 'ls',
+        'repair_strategy'       : 2,
         'beta_alns'             : 1000,
         'epsilon'               : 0.05,
         'degree_of_destruction' : 0.4,
@@ -239,7 +239,7 @@ if __name__ == "__main__":
         'seed'         : args.seed,
         'device'       : device
     })
-
+    # print(args.heuristic_ls)
     experiment = Experiment(agent_args, args.method, args.test_dataset)
     #instance = read1PDPTW('data/1PDPTW_generated_test/INSTANCES/generated-16.txt')
     solutions = experiment.run_all()

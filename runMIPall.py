@@ -42,10 +42,10 @@ def to_csv(output_dict, path):
         writer.writerows(output)
 
 
-def task(items):
+def task(items, timeLimit):
     print(items[1])
     instance = read1PDPTW(os.path.join(items[0], items[1]))
-    soln, cost, solve_time, status = solve1PDPTW_MIP_CPLEX(instance, timeLimit=600)
+    soln, cost, solve_time, status = solve1PDPTW_MIP_CPLEX(instance, timeLimit=timeLimit)
     result = {'filename':items[1], 'soln':soln, 'cost':cost, 'solve_time':solve_time, 'status':status}
 
     return result
@@ -76,7 +76,8 @@ def runMIPall(*args):
 
     items = []
     for file in os.listdir(dataset_path):
-        items.append((dataset_path,file))
+        if not file.startswith('.'):
+            items.append((dataset_path,file))
 
 
     # with Pool() as pool:
@@ -115,17 +116,78 @@ def runMIPall(*args):
    
     to_csv(output_dict, csv_all_path)
 
+def runMIPall_nobatch(dataset_name, timeLimit):    
+    filenames = []
+    solutions = []
+    costs = []
+    solve_times = []
+    status_all = []
+    dataset_path = os.path.join('/Users/chang/PhD_workplace/MIE1666/Project', 'data', dataset_name, 'INSTANCES')
 
-# runMIPall('1PDPTW_generated_d21_i1000_tmin300_tmax500_sd2022_test')
+    result_dir = os.path.join('.', 'results', 'experiment', dataset_name)
+    os.makedirs(result_dir, exist_ok=True)
+    result_filename = '{}_rp{}_{}_all_1min'.format(
+                'mip',
+                'none',
+                dataset_name
+                )
+    csv_path = os.path.join(result_dir, '{}.csv'.format(result_filename))
+    csv_all_path = os.path.join(result_dir, '{}_all.csv'.format(result_filename))
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-
-    # Model
-    parser.add_argument("--dataset_name", type=str, default='1PDPTW_generated_d31_i200_tmin300_tmax500_sd2022_test')
-    parser.add_argument("--batch_num", type=str, default='batch2')
+    items = []
+    for file in os.listdir(dataset_path):
+        if not file.startswith('.'):
+            items.append((dataset_path,file))
 
 
-    args, remaining = parser.parse_known_args()
+    # with Pool() as pool:
+    #     for result in pool.map(task, items):
+    for item in tqdm(items):
+        start = time.time()
+        result = task(item, timeLimit)    
+        end = time.time()
+        filenames.append(result['filename'])
+        solutions.append(result['soln'])
+        solve_times.append(end-start)
+        status_all.append(result['status'])
+        costs.append(result['cost'])
+        # print(result)
 
-    runMIPall(args)
+        # print(list(result.values()))
+        with open(csv_path, 'a', newline='') as f:
+            writer_object = writer(f)
+            csv_line = [datetime.fromtimestamp(end), result['filename'], [int(x) for x in result['soln']], result['cost'], end-start, result['status']]
+            writer_object.writerow(csv_line)
+            f.close()
+           		    
+    feasible_num = sum([1 for s in status_all if s in ['feasible', 'optimal']])
+    feasible_rate = feasible_num / len(status_all)
+
+    output_dict = {}
+    for i, (file, soln, t, status, cost) in enumerate(zip(filenames, solutions, solve_times, status_all, costs)):
+        data = {'instance'  : file, 
+                'solution'  : [int(x) for x in soln],
+                'cost'      : cost,
+                'solve_time': t,
+                'status'    : status,
+                }
+        output_dict[i] = data
+
+   
+    to_csv(output_dict, csv_all_path)
+
+
+runMIPall_nobatch('1PDPTW_generated_d31_i200_tmin300_tmax500_sd2022_test', 60)
+runMIPall_nobatch('1PDPTW_generated_d51_i200_tmin300_tmax500_sd2022_test', 60)
+
+
+# if __name__ == "__main__":
+#     parser = argparse.ArgumentParser()
+
+#     # Model
+#     parser.add_argument("--dataset_name", type=str, default='1PDPTW_generated_d21_i1000_tmin300_tmax500_sd2022_test')
+#     # parser.add_argument("--batch_num", type=str, default='batch2')
+
+#     args, remaining = parser.parse_known_args()
+
+#     runMIPall(args)

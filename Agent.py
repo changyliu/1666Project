@@ -59,7 +59,7 @@ class HeuristicAgent(Agent):
         solution = construction_heuristic(instance)
         if self.args.heuristic_ls == True:
             solution, numIter, timeSpent, num_dict, _ = \
-                localSearchExtended(solution, instance, 10000, 600, strategy = 2, verbose=0)
+                localSearchExtended(solution, instance, 10000, 10, strategy = 2, verbose=0)
         else:
             numIter = np.NAN
             num_dict = np.NAN
@@ -155,11 +155,11 @@ class RLAgent_repair(RLAgent):
 
         if self.args.repair == 'ls':
             # local search
-            solution, numIter, timeSpent, num_dict, feasible = localSearchExtended([x+1 for x in solution], instance, 5000, 600, strategy = self.args.repair_strategy)
+            solution, numIter, timeSpent, num_dict, feasible = localSearchExtended([x+1 for x in solution], instance, 10000, 10, strategy = self.args.repair_strategy)
             # solution = [x-1 for x in solution]
         elif self.args.repair == 'mip_cplex':
             # using cplex
-            solution, cost, timeSpent = cplex_MIP([x+1 for x in solution], instance, 5000, 600, verbose=0)
+            solution, cost, timeSpent = cplex_MIP([x+1 for x in solution], instance, 10000, 10, verbose=0)
             # solution = [x-1 for x in solution]
             numIter = np.NAN
             num_dict = np.NAN
